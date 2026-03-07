@@ -1,0 +1,40 @@
+# ─── QDAP Docker Compose ─────────────────────────────────
+# Services:
+#   qdap-dev   — development & testing
+#   qdap-bench — benchmark runs
+# ──────────────────────────────────────────────────────────
+
+services:
+  qdap-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qdap-dev
+    volumes:
+      - ./src:/app/src:cached
+      - ./tests:/app/tests:cached
+      - ./benchmarks:/app/benchmarks:cached
+      - ./examples:/app/examples:cached
+    environment:
+      - PYTHONPATH=/app/src
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - QFT_WINDOW_SIZE=64
+      - GHOST_LOSS_THRESHOLD=0.85
+    command: [ "pytest", "tests/", "-v", "--tb=short" ]
+
+  qdap-bench:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qdap-bench
+    volumes:
+      - ./src:/app/src:cached
+      - ./benchmarks:/app/benchmarks:cached
+    environment:
+      - PYTHONPATH=/app/src
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    command: [ "python", "-m", "pytest", "tests/", "-v", "-m", "benchmark" ]
+    profiles:
+      - bench

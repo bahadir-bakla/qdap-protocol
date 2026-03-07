@@ -1,0 +1,4 @@
+# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/chunking/adaptive_chunker.py
+# hypothesis_version: 6.151.9
+
+[0.0, 1e-09, 100.0, 1000000.0, 128, 1000, 1024, 'adaptive_batch', 'avg_chunk_size_kb', 'batch_size', 'chunk_size', 'current_strategy', 'duration_ms', 'frames', 'mode', 'n_batches', 'n_chunks', 'overhead_reduction', 'payload_size', 'single', 'strategy', 'strategy_counts', 'throughput_mbps', 'total_bytes', 'total_frames', 'total_payloads']

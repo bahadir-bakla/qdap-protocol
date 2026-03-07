@@ -1,0 +1,123 @@
+version: '3.8'
+
+networks:
+  qdap_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+
+services:
+  receiver:
+    build:
+      context: ..
+      dockerfile: docker_benchmark/Dockerfile.receiver
+    container_name: qdap_receiver
+    networks:
+      qdap_net:
+        ipv4_address: 172.20.0.10
+    ports:
+      - "19600:19600"
+      - "19601:19601"
+      - "19700:19700/udp"
+      - "19701:19701/udp"
+    command: python docker_benchmark/receiver/start_servers.py
+
+  sender:
+    build:
+      context: ..
+      dockerfile: docker_benchmark/Dockerfile.sender
+    container_name: qdap_sender
+    networks:
+      qdap_net:
+        ipv4_address: 172.20.0.20
+    depends_on:
+      - receiver
+    cap_add:
+      - NET_ADMIN
+    command: >
+      sh -c "
+        sleep 3 &&
+        tc qdisc add dev eth0 root netem delay 20ms 2ms loss 1% &&
+        echo '✅ Network conditions: 20ms delay, 2ms jitter, 1% loss' &&
+        python docker_benchmark/sender/run_benchmark.py
+      "
+    volumes:
+      - ./results:/app/docker_benchmark/results
+
+  # ── QUIC Benchmark Servisleri ──────────────────────────────────
+  quic_receiver:
+    build:
+      context: ..
+      dockerfile: docker_benchmark/Dockerfile.receiver
+    container_name: qdap_quic_receiver
+    networks:
+      qdap_net:
+        ipv4_address: 172.20.0.10 # Mevcut receiver ile aynı IP
+    ports:
+      - "19702:19700/udp" # QUIC ACK server mapping avoid conflict with receiver
+      - "19703:19701/udp" # QDAP QUIC server mapping avoid conflict
+      - "19704:19702/tcp" # Stats endpoint mapping avoid conflict
+    volumes:
+      - ./quic/certs:/app/docker_benchmark/quic/certs:ro
+      - ./quic/receiver/quic_servers.py:/app/docker_benchmark/quic/receiver/quic_servers.py:ro
+    command: python docker_benchmark/quic/receiver/quic_servers.py
+
+  quic_sender:
+    build:
+      context: ..
+      dockerfile: docker_benchmark/Dockerfile.sender
+    container_name: qdap_quic_sender
+    networks:
+      qdap_net:
+        ipv4_address: 172.20.0.21
+    cap_add:
+      - NET_ADMIN
+    depends_on:
+      - quic_receiver
+    volumes:
+      - ./quic/certs:/app/docker_benchmark/quic/certs:ro
+      - ./quic/sender:/app/docker_benchmark/quic/sender:ro
+      - ./results:/app/results
+    command: >
+      sh -c "
+        sleep 3 &&
+        tc qdisc add dev eth0 root netem delay 20ms 2ms loss 1% &&
+        echo 'netem aktif: 20ms delay, 1% loss' &&
+        tc qdisc show dev eth0 &&
+        python docker_benchmark/quic/sender/run_quic_benchmark.py
+      "
+
+  # ── MQTT Benchmark Servisleri ──────────────────────────────────
+  mqtt_broker:
+    image: eclipse-mosquitto:2.0
+    container_name: qdap_mqtt_broker
+    networks:
+      qdap_net:
+        ipv4_address: 172.20.0.30
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mqtt/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  mqtt_benchmark:
+    build:
+      context: ..
+      dockerfile: docker_benchmark/Dockerfile.sender
+    container_name: qdap_mqtt_benchmark
+    networks:
+      qdap_net:
+        ipv4_address: 172.20.0.31
+    cap_add:
+      - NET_ADMIN
+    depends_on:
+      - mqtt_broker
+    volumes:
+      - ./results:/app/results
+    command: >
+      sh -c "
+        sleep 3 &&
+        tc qdisc add dev eth0 root netem delay 20ms 2ms loss 1% &&
+        echo 'netem: 20ms delay, 1% loss' &&
+        python docker_benchmark/mqtt/run_mqtt_benchmark.py
+      "

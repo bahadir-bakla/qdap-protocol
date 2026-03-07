@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "timestamp": "2026-03-05T13:25:40",
+    "duration_sec": 60,
+    "msg_interval_s": 10,
+    "tcp_keepalive": "SO_KEEPALIVE, idle=10s, interval=5s, ACK per msg",
+    "ghost_session": "Markov model, local update, zero wire overhead"
+  },
+  "tcp_keepalive": {
+    "messages_sent": 6,
+    "data_bytes_sent": 432,
+    "overhead_bytes": 48,
+    "overhead_per_min": 47.8
+  },
+  "ghost_session": {
+    "messages_sent": 6,
+    "data_bytes_sent": 798,
+    "overhead_bytes": 0,
+    "overhead_per_min": 0.0
+  },
+  "comparison": {
+    "overhead_reduction_pct": 100.0,
+    "tcp_overhead_bytes": 48,
+    "ghost_overhead_bytes": 0
+  }
+}

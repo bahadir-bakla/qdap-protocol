@@ -1,0 +1,1 @@
+"""QDAP Adaptive Chunking Module."""

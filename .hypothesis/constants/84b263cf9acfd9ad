@@ -1,0 +1,4 @@
+# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/examples/video/adaptive_bitrate.py
+# hypothesis_version: 6.151.9
+
+[0.08, 0.65, 1.0, 100, 'high', 'low']

@@ -1,0 +1,164 @@
+{
+  "metadata": {
+    "timestamp": "2026-03-07T11:03:44",
+    "network": "Docker bridge, 20ms delay 2ms jitter, 1% loss",
+    "transport": "TCP (both protocols use same kernel TCP stack)",
+    "what_differs": "Application-layer ACK behavior + adaptive chunking",
+    "chunking": "QFT-guided adaptive chunk sizing + batch frames",
+    "n_runs": 3,
+    "median_reported": true,
+    "netem_verification": {
+      "tc_qdisc_output": "qdisc netem 801e: root refcnt 9 limit 1000 delay 20ms  2ms loss 1% seed 5515712299502322411",
+      "netem_active": true,
+      "delay_active": true,
+      "loss_active": true
+    }
+  },
+  "results": [
+    {
+      "label": "1KB",
+      "payload_size": 1024,
+      "n_messages": 1000,
+      "n_runs": 3,
+      "classical_tput_runs": [
+        0.317,
+        0.312,
+        0.322
+      ],
+      "classical_tput_median": 0.317,
+      "classical_ack_oh_pct": 0.7812,
+      "classical_ack_bytes": 8000,
+      "classical_p99_ms": 36.962,
+      "qdap_tput_runs": [
+        45.406,
+        44.091,
+        12.354
+      ],
+      "qdap_tput_median": 44.091,
+      "qdap_ack_oh_pct": 0.0,
+      "qdap_ack_bytes": 0,
+      "qdap_p99_ms": 0.215,
+      "qdap_chunk_strategy": "MEDIUM (64KB) \u2014 default",
+      "qdap_avg_chunk_kb": 0.0,
+      "qdap_frames_sent": 1000,
+      "ratio": 139.09,
+      "overhead_reduction": "0.78% \u2192 0.00%"
+    },
+    {
+      "label": "64KB",
+      "payload_size": 65536,
+      "n_messages": 200,
+      "n_runs": 3,
+      "classical_tput_runs": [
+        6.834,
+        6.309,
+        8.033
+      ],
+      "classical_tput_median": 6.834,
+      "classical_ack_oh_pct": 0.0122,
+      "classical_ack_bytes": 1600,
+      "classical_p99_ms": 145.623,
+      "qdap_tput_runs": [
+        45.949,
+        116.81,
+        93.746
+      ],
+      "qdap_tput_median": 93.746,
+      "qdap_ack_oh_pct": 0.0,
+      "qdap_ack_bytes": 0,
+      "qdap_p99_ms": 40.047,
+      "qdap_chunk_strategy": "MEDIUM (64KB) \u2014 general",
+      "qdap_avg_chunk_kb": 32.0,
+      "qdap_frames_sent": 400,
+      "ratio": 13.72,
+      "overhead_reduction": "0.01% \u2192 0.00%"
+    },
+    {
+      "label": "1MB",
+      "payload_size": 1048576,
+      "n_messages": 100,
+      "n_runs": 3,
+      "classical_tput_runs": [
+        10.091,
+        8.079,
+        7.342
+      ],
+      "classical_tput_median": 8.079,
+      "classical_ack_oh_pct": 0.0008,
+      "classical_ack_bytes": 800,
+      "classical_p99_ms": 1884.49,
+      "qdap_tput_runs": [
+        8.997,
+        7.622,
+        7.619
+      ],
+      "qdap_tput_median": 7.622,
+      "qdap_ack_oh_pct": 0.0,
+      "qdap_ack_bytes": 0,
+      "qdap_p99_ms": 1827.957,
+      "qdap_chunk_strategy": "LARGE (256KB) \u2014 bulk",
+      "qdap_avg_chunk_kb": 1024.0,
+      "qdap_frames_sent": 100,
+      "ratio": 0.94,
+      "overhead_reduction": "0.00% \u2192 0.00%"
+    },
+    {
+      "label": "10MB",
+      "payload_size": 10485760,
+      "n_messages": 5,
+      "n_runs": 3,
+      "classical_tput_runs": [
+        6.935,
+        8.501,
+        7.917
+      ],
+      "classical_tput_median": 7.917,
+      "classical_ack_oh_pct": 0.0001,
+      "classical_ack_bytes": 40,
+      "classical_p99_ms": 12973.091,
+      "qdap_tput_runs": [
+        7.272,
+        7.662,
+        8.064
+      ],
+      "qdap_tput_median": 7.662,
+      "qdap_ack_oh_pct": 0.0,
+      "qdap_ack_bytes": 0,
+      "qdap_p99_ms": 12278.579,
+      "qdap_chunk_strategy": "JUMBO (1MB) \u2014 large file",
+      "qdap_avg_chunk_kb": 1706.7,
+      "qdap_frames_sent": 30,
+      "ratio": 0.97,
+      "overhead_reduction": "0.00% \u2192 0.00%"
+    },
+    {
+      "label": "100MB",
+      "payload_size": 104857600,
+      "n_messages": 2,
+      "n_runs": 3,
+      "classical_tput_runs": [
+        14.338,
+        8.116,
+        10.392
+      ],
+      "classical_tput_median": 10.392,
+      "classical_ack_oh_pct": 0.0,
+      "classical_ack_bytes": 16,
+      "classical_p99_ms": 106975.387,
+      "qdap_tput_runs": [
+        8.576,
+        7.32,
+        7.914
+      ],
+      "qdap_tput_median": 7.914,
+      "qdap_ack_oh_pct": 0.0,
+      "qdap_ack_bytes": 0,
+      "qdap_p99_ms": 106149.682,
+      "qdap_chunk_strategy": "JUMBO (1MB) \u2014 large file",
+      "qdap_avg_chunk_kb": 2007.8,
+      "qdap_frames_sent": 102,
+      "ratio": 0.76,
+      "overhead_reduction": "0.00% \u2192 0.00%"
+    }
+  ]
+}

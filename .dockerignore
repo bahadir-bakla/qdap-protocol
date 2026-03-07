@@ -1,0 +1,21 @@
+# Ignore everything except what QDAP needs
+.git
+.github
+__pycache__
+*.pyc
+.pytest_cache
+.mypy_cache
+*.egg-info
+dist
+build
+.venv
+venv
+node_modules
+benchmarks/results
+paper/
+examples/
+*.md
+!README.md
+!CONTRIBUTING.md
+.gemini
+.agents

@@ -1,0 +1,4 @@
+# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/transport/tcp/adapter.py
+# hypothesis_version: 6.151.9
+
+[0.0, 99.9, 1000000.0, -5000, 256, 1024, 10000, '>4sHI', 'Not connected', 'bytes_received', 'bytes_sent', 'connection_resets', 'frames_received', 'frames_sent', 'p50_latency_ms', 'p95_latency_ms', 'p999_latency_ms', 'p99_latency_ms', 'qdap.transport.tcp', 'socket', 'throughput_mbps']

@@ -1,0 +1,4 @@
+# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/verification/ghost/markov_model.py
+# hypothesis_version: 6.151.9
+
+[b'markov_test', 1e-10, 0.01, 0.05, 0.1, 0.2, 0.3, 0.9, 256, 10000, 100000, 'bad', 'good']

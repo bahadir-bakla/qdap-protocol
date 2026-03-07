@@ -1,0 +1,47 @@
+[
+  {
+    "profile": "home_wifi",
+    "delay_ms": 20.0,
+    "loss_rate": 0.0,
+    "total_sent": 500,
+    "total_received": 500,
+    "total_lost": 0,
+    "empirical_loss_rate": 0.0,
+    "ghost_detected": 0,
+    "ghost_precision": 0.0,
+    "ghost_recall": 0.0,
+    "ghost_f1": 0.0,
+    "mean_latency_ms": 0.264,
+    "p99_latency_ms": 0.399
+  },
+  {
+    "profile": "4g_mobile",
+    "delay_ms": 50.0,
+    "loss_rate": 0.01,
+    "total_sent": 500,
+    "total_received": 495,
+    "total_lost": 5,
+    "empirical_loss_rate": 0.01,
+    "ghost_detected": 5,
+    "ghost_precision": 1.0,
+    "ghost_recall": 1.0,
+    "ghost_f1": 1.0,
+    "mean_latency_ms": 0.623,
+    "p99_latency_ms": 1.023
+  },
+  {
+    "profile": "congested",
+    "delay_ms": 100.0,
+    "loss_rate": 0.05,
+    "total_sent": 500,
+    "total_received": 484,
+    "total_lost": 16,
+    "empirical_loss_rate": 0.032,
+    "ghost_detected": 16,
+    "ghost_precision": 1.0,
+    "ghost_recall": 1.0,
+    "ghost_f1": 1.0,
+    "mean_latency_ms": 1.19,
+    "p99_latency_ms": 2.01
+  }
+]

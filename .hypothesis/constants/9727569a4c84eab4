@@ -1,0 +1,4 @@
+# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/transport/quic/adapter.py
+# hypothesis_version: 6.151.9
+
+[0.001, 1000000.0, 365, 2048, 65537, '>I', 'bytes_received', 'bytes_sent', 'cert.pem', 'frames_received', 'frames_sent', 'key.pem', 'localhost', 'qdap-test', 'qdap_quic_', 'quic', 'throughput_mbps', 'type', 'wb']

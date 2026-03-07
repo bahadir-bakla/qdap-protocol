@@ -1,0 +1,4 @@
+# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/verification/qft/equivalence.py
+# hypothesis_version: 6.151.9
+
+[1e-10, 1e-05, 0.01, 0.1, 0.2, 0.5, 0.7, 0.9, 'burst_traffic', 'constant', 'custom', 'high', 'low', 'mid', 'mixed_traffic', 'pure_high_freq', 'pure_low_freq', 'random_uniform', '❌ FARK VAR']

@@ -1,0 +1,31 @@
+[package]
+name    = "qdap_core"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name    = "qdap_core"
+crate-type = ["cdylib"]   # Python .so için zorunlu
+
+[dependencies]
+# PyO3 — Python binding
+pyo3 = { version = "0.20", features = ["extension-module"] }
+
+# Kriptografi
+aes-gcm   = { version = "0.10", features = ["aes", "std"] }
+sha3      = "0.10"
+digest    = "0.10"
+x25519-dalek = { version = "2.0", features = ["static_secrets"] }
+rand      = "0.8"
+
+# SIMD için
+packed_simd_2 = { version = "0.3", optional = true }
+
+[features]
+default = []
+simd    = ["packed_simd_2"]
+
+[profile.release]
+opt-level = 3
+lto       = true      # Link-time optimization
+codegen-units = 1     # Daha iyi optimizasyon

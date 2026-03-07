@@ -1,0 +1,4 @@
+# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/scheduler/strategies.py
+# hypothesis_version: 6.151.9
+
+[0.5, 65536, 'ADAPTIVE_HYBRID', 'BULK_TRANSFER', 'LATENCY_FIRST']

@@ -1,0 +1,32 @@
+{
+  "tcp": {
+    "protocol": "TCP",
+    "total_messages": 10000,
+    "payload_bytes": 2560000,
+    "total_bytes_sent": 7205888,
+    "total_bytes_recv": 7205888,
+    "overhead_pct": 181.48,
+    "throughput_mbps": 71.309,
+    "latency_p50_ms": 0.054,
+    "latency_p99_ms": 0.088,
+    "latency_p999_ms": 0.141,
+    "duration_sec": 0.574
+  },
+  "qdap": {
+    "protocol": "QDAP",
+    "total_messages": 10000,
+    "payload_bytes": 2560000,
+    "total_bytes_sent": 2560000,
+    "total_bytes_recv": 2560000,
+    "overhead_pct": 0.0,
+    "throughput_mbps": 381.473,
+    "latency_p50_ms": 0.0,
+    "latency_p99_ms": 0.001,
+    "latency_p999_ms": 0.002,
+    "duration_sec": 0.054
+  },
+  "summary": {
+    "ack_overhead_reduction": "181.48% \u2192 0.00%",
+    "overhead_eliminated": true
+  }
+}

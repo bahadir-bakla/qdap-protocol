@@ -1,0 +1,4 @@
+# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/transport/tcp/tuning.py
+# hypothesis_version: 6.151.9
+
+[1024, 'TCP_CORK', 'TCP_KEEPCNT', 'TCP_KEEPIDLE', 'TCP_KEEPINTVL']

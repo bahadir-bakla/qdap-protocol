@@ -1,0 +1,1 @@
+"""Ghost session verification subpackage."""
