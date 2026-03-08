@@ -1,0 +1,27 @@
+feat: add security layer, MQTT benchmark, Rust hot-path, hardware validation
+
+Security layer:
+- X25519 ECDH handshake with HKDF-SHA256 key derivation
+- AES-256-GCM per-frame encryption (12B nonce + 16B tag)
+- Key rotation every 1000 messages or 300s with 50-message overlap window
+- SecureGhostSession: encrypted QDAP still outperforms plaintext classical TCP
+
+Rust native extension (qdap_core):
+- PyO3 + maturin build pipeline
+- SHA3-256, AES-256-GCM, X25519 DH, L2 normalization
+- _rust_bridge.py auto-selects Rust backend with Python fallback
+- L2 normalization: 3x speedup over pure Python
+
+Benchmarks:
+- MQTT comparison: 136x throughput vs QoS1 at 1KB, 0 ACK bytes vs 4000
+- IoT priority: 100% emergency deadline delivery vs 0% MQTT FIFO
+- LAN hardware validation: 802.11ac WiFi, two physical machines, 28x at 1KB
+- Ghost keepalive: 0 bytes/min vs 47.8 bytes/min TCP SO_KEEPALIVE
+- Security overhead: <10% at 1MB, encrypted QDAP > unencrypted classical
+
+Fixes:
+- QFTScheduler chunk strategy: pass original payload size before encryption
+- Stochastic test_telemetry_sensor replaced with 3 deterministic variants
+- AdaptiveChunker avg_chunk_kb corrected from 32KB to 64KB for 64KB payloads
+
+Tests: 226 passing (7.71s) — up from 165

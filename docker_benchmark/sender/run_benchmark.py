@@ -171,7 +171,7 @@ async def run_all():
 
     output_dir = Path(__file__).parent.parent / "results"
     output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / "adaptive_benchmark_v5_secure.json"
+    output_path = output_dir / "adaptive_benchmark_v5_secure_fixed.json"
     with open(output_path, "w") as f:
         json.dump(output, f, indent=2)
 

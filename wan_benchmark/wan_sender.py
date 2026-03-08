@@ -46,11 +46,12 @@ async def get_stats(host: str, port: int = 19603) -> dict:
         )
         w.write(b"GET /stats HTTP/1.0\r\n\r\n")
         await w.drain()
+        w.write_eof()
         resp = await asyncio.wait_for(r.read(4096), timeout=5.0)
         w.close()
         body = resp.decode(errors="ignore").split("\r\n\r\n", 1)
         return json.loads(body[1]) if len(body) > 1 else {}
-    except Exception:
+    except Exception as e:
         return {}
 
 
@@ -61,9 +62,10 @@ async def reset_stats(host: str, port: int = 19603) -> None:
         )
         w.write(b"POST /reset HTTP/1.0\r\n\r\n")
         await w.drain()
-        await r.read(256)
+        w.write_eof()
+        await asyncio.wait_for(r.read(256), timeout=5.0)
         w.close()
-    except Exception:
+    except Exception as e:
         pass
 
 
@@ -202,9 +204,10 @@ async def run_secure(
 # ── Runner ────────────────────────────────────────────────────────
 
 PAYLOAD_CONFIGS = [
-    ("1KB",  1024,    200),
-    ("64KB", 65536,   50),
-    ("1MB",  1048576, 10),
+    ("1KB",   1024,        1000),   # 1000 mesaj
+    ("64KB",  65536,        200),   # 200 mesaj
+    ("1MB",   1048576,       50),   # 50 mesaj
+    ("10MB",  10485760,       5),   # 5 mesaj
 ]
 N_RUNS = 3
 
@@ -268,15 +271,16 @@ async def run_all(host: str, measured_rtt_ms: float):
     output = {
         "metadata": {
             "timestamp":        time.strftime("%Y-%m-%dT%H:%M:%S"),
-            "test_type":        "WAN — real internet (Mac WiFi ↔ Windows Hotspot)",
+            "test_type":        "Hardware validation — 802.11ac WiFi LAN (two physical machines, same AP, no simulation)",
             "sender":           "Mac (WiFi)",
-            "receiver":         "Windows (Mobile Hotspot)",
+            "receiver":         "Windows (WiFi, same AP)",
             "measured_rtt_ms":  measured_rtt_ms,
             "n_runs":           N_RUNS,
             "median_reported":  True,
             "note":             (
-                "Real WAN test. No artificial delay. "
-                "RTT measured via ping before benchmark."
+                "Real hardware test on physical network.\n"
+                "No artificial delay or packet loss.\n"
+                "Validates protocol behavior on real WiFi stack."
             ),
         },
         "results": all_results,
