@@ -199,7 +199,7 @@ cd qdap_core && maturin develop --release
 
 ```bash
 pytest tests/ -v
-# 224 tests, ~8s
+# 226 tests, ~8s
 ```
 
 ## Benchmarks
@@ -256,7 +256,7 @@ git commit -m "🚀 Initial commit: QDAP Protocol v1.0
 - Rust hot-path: SHA3, AES-NI, L2-normalization (qdap_core)
 - Transport: TCP + QUIC adapters
 - Benchmarks: Docker (20ms RTT, 1% loss), MQTT, IoT, QUIC, WAN
-- 224 tests passing
+- 226 tests passing
 
 Key result: 110× throughput improvement at 1KB (Ghost Session vs Classical)
 " 2>/dev/null || git commit --allow-empty -m "Initial commit"

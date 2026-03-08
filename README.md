@@ -61,7 +61,7 @@ cd qdap_core && maturin develop --release
 
 ```bash
 pytest tests/ -v
-# 224 tests, ~8s
+# 226 tests, ~8s
 ```
 
 ## Benchmarks
