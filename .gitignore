@@ -53,3 +53,12 @@ wan_benchmark/results/
 
 # Qiskit cache
 .qiskit/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
