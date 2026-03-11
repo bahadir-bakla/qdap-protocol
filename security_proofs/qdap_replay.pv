@@ -1,0 +1,37 @@
+(* qdap_replay.pv
+   Replay Saldırısı Direnci:
+   Sequence number + timestamp ile tekrar gönderilen frame'ler reddedilir.
+*)
+
+free c: channel.
+type key.
+type nonce.
+type seqno.
+type timestamp.
+
+fun enc_seq(key, seqno, timestamp, bitstring): bitstring.
+reduc forall k: key, s: seqno, t: timestamp, m: bitstring;
+  dec_seq(k, s, t, enc_seq(k, s, t, m)) = m.
+
+(* Tekrar kullanılan sequence → hata *)
+event FrameAccepted(seqno, timestamp).
+event ReplayAttempted(seqno, timestamp).
+
+(* Bir sequence numarasının iki kez kabul edilemeyeceğini kanıtla *)
+query s: seqno, t1: timestamp, t2: timestamp;
+  event(FrameAccepted(s, t1)) && event(FrameAccepted(s, t2)) ==> t1 = t2.
+
+let Sender(sk: key) =
+  new seq: seqno;
+  new ts: timestamp;
+  new msg: bitstring;
+  out(c, (seq, ts, enc_seq(sk, seq, ts, msg))).
+
+let Receiver(sk: key) =
+  in(c, (seq: seqno, ts: timestamp, frame: bitstring));
+  let msg = dec_seq(sk, seq, ts, frame) in
+  event FrameAccepted(seq, ts).
+
+process
+  new sk: key;
+  (!Sender(sk) | !Receiver(sk))

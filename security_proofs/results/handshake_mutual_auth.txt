@@ -1,0 +1,219 @@
+Linear part:
+dh_shared(dh_pub(a),b) = dh_shared(dh_pub(b),a)
+Completing equations...
+Completed equations:
+dh_shared(dh_pub(a),b) = dh_shared(dh_pub(b),a)
+Convergent part:
+aead_dec(k,aead_enc(k,m)) = m
+Completing equations...
+Completed equations:
+aead_dec(k,aead_enc(k,m)) = m
+Process 0 (that is, the initial process):
+{1}new sk_s: key;
+{2}new sk_c: key;
+{3}let pk_s: key = dh_pub(sk_s) in
+{4}let pk_c: key = dh_pub(sk_c) in
+(
+    {5}!
+    {6}let sk_c_1: key = sk_c in
+    {7}new a: key;
+    {8}let pk_a: key = dh_pub(a) in
+    {9}new nonce_c: nonce;
+    {10}out(c, (pk_a,nonce_c));
+    {11}in(c, (pk_b: key,nonce_s: nonce,cert_s: bitstring));
+    {12}if (verify(pk_s,cert_s,(pk_b,nonce_s)) = true) then
+    {13}let shared: key = dh_shared(pk_b,a) in
+    {14}let sk_session: key = hkdf(shared,nonce_c,nonce_s) in
+    {15}let transcript: bitstring = (pk_a,nonce_c,pk_b,nonce_s) in
+    {16}in(c, server_finished: bitstring);
+    {17}if (server_finished = hmac(sk_session,transcript)) then
+    {18}out(c, hmac(sk_session,(transcript,server_finished)));
+    {19}event ClientAuth(pk_s,dh_pub(sk_c_1));
+    {20}event SessionEstablished(sk_session);
+    {21}in(c, ciphertext: bitstring);
+    {22}let plaintext: bitstring = aead_dec(sk_session,ciphertext) in
+    {23}out(s, plaintext)
+) | (
+    {24}!
+    {25}let sk_s_1: key = sk_s in
+    {26}let pk_s_1: key = dh_pub(sk_s_1) in
+    {27}in(c, (pk_a_1: key,nonce_c_1: nonce));
+    {28}new b: key;
+    {29}let pk_b_1: key = dh_pub(b) in
+    {30}new nonce_s_1: nonce;
+    {31}let cert_s_1: bitstring = sign(sk_s_1,(pk_b_1,nonce_s_1)) in
+    {32}out(c, (pk_b_1,nonce_s_1,cert_s_1));
+    {33}let shared_1: key = dh_shared(pk_a_1,b) in
+    {34}let sk_session_1: key = hkdf(shared_1,nonce_c_1,nonce_s_1) in
+    {35}let transcript_1: bitstring = (pk_a_1,nonce_c_1,pk_b_1,nonce_s_1) in
+    {36}out(c, hmac(sk_session_1,transcript_1));
+    {37}in(c, client_finished: bitstring);
+    {38}if (client_finished = hmac(sk_session_1,(transcript_1,hmac(sk_session_1,transcript_1)))) then
+    {39}event ServerAuth(pk_s_1,pk_a_1);
+    {40}event SessionEstablished(sk_session_1);
+    {41}new msg: bitstring;
+    {42}out(c, aead_enc(sk_session_1,msg))
+)
+
+--  Process 1 (that is, process 0, with let moved downwards):
+{1}new sk_s: key;
+{2}new sk_c: key;
+(
+    {5}!
+    {7}new a: key;
+    {9}new nonce_c: nonce;
+    {8}let pk_a: key = dh_pub(a) in
+    {10}out(c, (pk_a,nonce_c));
+    {11}in(c, (pk_b: key,nonce_s: nonce,cert_s: bitstring));
+    {3}let pk_s: key = dh_pub(sk_s) in
+    {12}if (verify(pk_s,cert_s,(pk_b,nonce_s)) = true) then
+    {16}in(c, server_finished: bitstring);
+    {15}let transcript: bitstring = (pk_a,nonce_c,pk_b,nonce_s) in
+    {13}let shared: key = dh_shared(pk_b,a) in
+    {14}let sk_session: key = hkdf(shared,nonce_c,nonce_s) in
+    {17}if (server_finished = hmac(sk_session,transcript)) then
+    {18}out(c, hmac(sk_session,(transcript,server_finished)));
+    {6}let sk_c_1: key = sk_c in
+    {19}event ClientAuth(pk_s,dh_pub(sk_c_1));
+    {20}event SessionEstablished(sk_session);
+    {21}in(c, ciphertext: bitstring);
+    {22}let plaintext: bitstring = aead_dec(sk_session,ciphertext) in
+    {23}out(s, plaintext)
+) | (
+    {24}!
+    {27}in(c, (pk_a_1: key,nonce_c_1: nonce));
+    {28}new b: key;
+    {30}new nonce_s_1: nonce;
+    {29}let pk_b_1: key = dh_pub(b) in
+    {25}let sk_s_1: key = sk_s in
+    {31}let cert_s_1: bitstring = sign(sk_s_1,(pk_b_1,nonce_s_1)) in
+    {32}out(c, (pk_b_1,nonce_s_1,cert_s_1));
+    {35}let transcript_1: bitstring = (pk_a_1,nonce_c_1,pk_b_1,nonce_s_1) in
+    {33}let shared_1: key = dh_shared(pk_a_1,b) in
+    {34}let sk_session_1: key = hkdf(shared_1,nonce_c_1,nonce_s_1) in
+    {36}out(c, hmac(sk_session_1,transcript_1));
+    {37}in(c, client_finished: bitstring);
+    {38}if (client_finished = hmac(sk_session_1,(transcript_1,hmac(sk_session_1,transcript_1)))) then
+    {26}let pk_s_1: key = dh_pub(sk_s_1) in
+    {39}event ServerAuth(pk_s_1,pk_a_1);
+    {40}event SessionEstablished(sk_session_1);
+    {41}new msg: bitstring;
+    {42}out(c, aead_enc(sk_session_1,msg))
+)
+
+-- Query not attacker(session_key_secret[]) in process 1.
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 120 rules (34 with conclusion selected). Queue: 7 rules.
+Starting query not attacker(session_key_secret[])
+RESULT not attacker(session_key_secret[]) is true.
+-- Query event(ClientAuth(pk_s_2,pk_c_1)) ==> event(ServerAuth(pk_s_2,pk_c_1)) in process 1.
+Translating the process into Horn clauses...
+Completing...
+200 rules inserted. Base: 107 rules (29 with conclusion selected). Queue: 17 rules.
+Starting query event(ClientAuth(pk_s_2,pk_c_1)) ==> event(ServerAuth(pk_s_2,pk_c_1))
+goal reachable: event(ClientAuth(dh_pub(sk_s[]),dh_pub(sk_c[])))
+
+Derivation:
+Abbreviations:
+nonce_c_2 = nonce_c[!1 = @sid]
+a_1 = a[!1 = @sid]
+b_1 = b[nonce_c_1 = nonce_c_2,pk_a_1 = dh_pub(a_1),!1 = @sid_1]
+nonce_s_2 = nonce_s_1[nonce_c_1 = nonce_c_2,pk_a_1 = dh_pub(a_1),!1 = @sid_1]
+
+1. The message (dh_pub(a_1),nonce_c_2) may be sent to the attacker at output {10}.
+attacker((dh_pub(a_1),nonce_c_2)).
+
+2. By 1, the attacker may know (dh_pub(a_1),nonce_c_2).
+Using the function 2-proj-2-tuple the attacker may obtain nonce_c_2.
+attacker(nonce_c_2).
+
+3. By 1, the attacker may know (dh_pub(a_1),nonce_c_2).
+Using the function 1-proj-2-tuple the attacker may obtain dh_pub(a_1).
+attacker(dh_pub(a_1)).
+
+4. By 3, the attacker may know dh_pub(a_1).
+By 2, the attacker may know nonce_c_2.
+Using the function 2-tuple the attacker may obtain (dh_pub(a_1),nonce_c_2).
+attacker((dh_pub(a_1),nonce_c_2)).
+
+5. The message (dh_pub(a_1),nonce_c_2) that the attacker may have by 4 may be received at input {27}.
+So the message (dh_pub(b_1),nonce_s_2,sign(sk_s[],(dh_pub(b_1),nonce_s_2))) may be sent to the attacker at output {32}.
+attacker((dh_pub(b_1),nonce_s_2,sign(sk_s[],(dh_pub(b_1),nonce_s_2)))).
+
+6. By 5, the attacker may know (dh_pub(b_1),nonce_s_2,sign(sk_s[],(dh_pub(b_1),nonce_s_2))).
+Using the function 3-proj-3-tuple the attacker may obtain sign(sk_s[],(dh_pub(b_1),nonce_s_2)).
+attacker(sign(sk_s[],(dh_pub(b_1),nonce_s_2))).
+
+7. By 5, the attacker may know (dh_pub(b_1),nonce_s_2,sign(sk_s[],(dh_pub(b_1),nonce_s_2))).
+Using the function 2-proj-3-tuple the attacker may obtain nonce_s_2.
+attacker(nonce_s_2).
+
+8. By 5, the attacker may know (dh_pub(b_1),nonce_s_2,sign(sk_s[],(dh_pub(b_1),nonce_s_2))).
+Using the function 1-proj-3-tuple the attacker may obtain dh_pub(b_1).
+attacker(dh_pub(b_1)).
+
+9. By 8, the attacker may know dh_pub(b_1).
+By 7, the attacker may know nonce_s_2.
+By 6, the attacker may know sign(sk_s[],(dh_pub(b_1),nonce_s_2)).
+Using the function 3-tuple the attacker may obtain (dh_pub(b_1),nonce_s_2,sign(sk_s[],(dh_pub(b_1),nonce_s_2))).
+attacker((dh_pub(b_1),nonce_s_2,sign(sk_s[],(dh_pub(b_1),nonce_s_2)))).
+
+10. The message (dh_pub(a_1),nonce_c_2) that the attacker may have by 4 may be received at input {27}.
+So the message hmac(hkdf(dh_shared(dh_pub(b_1),a_1),nonce_c_2,nonce_s_2),(dh_pub(a_1),nonce_c_2,dh_pub(b_1),nonce_s_2)) may be sent to the attacker at output {36}.
+attacker(hmac(hkdf(dh_shared(dh_pub(b_1),a_1),nonce_c_2,nonce_s_2),(dh_pub(a_1),nonce_c_2,dh_pub(b_1),nonce_s_2))).
+
+11. The message (dh_pub(b_1),nonce_s_2,sign(sk_s[],(dh_pub(b_1),nonce_s_2))) that the attacker may have by 9 may be received at input {11}.
+The message hmac(hkdf(dh_shared(dh_pub(b_1),a_1),nonce_c_2,nonce_s_2),(dh_pub(a_1),nonce_c_2,dh_pub(b_1),nonce_s_2)) that the attacker may have by 10 may be received at input {16}.
+So event ClientAuth(dh_pub(sk_s[]),dh_pub(sk_c[])) may be executed at {19}.
+event(ClientAuth(dh_pub(sk_s[]),dh_pub(sk_c[]))).
+
+12. By 11, event(ClientAuth(dh_pub(sk_s[]),dh_pub(sk_c[]))).
+The goal is reached, represented in the following fact:
+event(ClientAuth(dh_pub(sk_s[]),dh_pub(sk_c[]))).
+
+
+A more detailed output of the traces is available with
+  set traceDisplay = long.
+
+new sk_s: key creating sk_s_2 at {1}
+
+new sk_c: key creating sk_c_2 at {2}
+
+new a: key creating a_2 at {7} in copy a_3
+
+new nonce_c: nonce creating nonce_c_3 at {9} in copy a_3
+
+out(c, (~M,~M_1)) with ~M = dh_pub(a_2), ~M_1 = nonce_c_3 at {10} in copy a_3
+
+in(c, (~M,~M_1)) with ~M = dh_pub(a_2), ~M_1 = nonce_c_3 at {27} in copy a_4
+
+new b: key creating b_2 at {28} in copy a_4
+
+new nonce_s_1: nonce creating nonce_s_3 at {30} in copy a_4
+
+out(c, (~M_2,~M_3,~M_4)) with ~M_2 = dh_pub(b_2), ~M_3 = nonce_s_3, ~M_4 = sign(sk_s_2,(dh_pub(b_2),nonce_s_3)) at {32} in copy a_4
+
+out(c, ~M_5) with ~M_5 = hmac(hkdf(dh_shared(dh_pub(a_2),b_2),nonce_c_3,nonce_s_3),(dh_pub(a_2),nonce_c_3,dh_pub(b_2),nonce_s_3)) at {36} in copy a_4
+
+in(c, (~M_2,~M_3,~M_4)) with ~M_2 = dh_pub(b_2), ~M_3 = nonce_s_3, ~M_4 = sign(sk_s_2,(dh_pub(b_2),nonce_s_3)) at {11} in copy a_3
+
+in(c, ~M_5) with ~M_5 = hmac(hkdf(dh_shared(dh_pub(b_2),a_2),nonce_c_3,nonce_s_3),(dh_pub(a_2),nonce_c_3,dh_pub(b_2),nonce_s_3)) at {16} in copy a_3
+
+out(c, ~M_6) with ~M_6 = hmac(hkdf(dh_shared(dh_pub(b_2),a_2),nonce_c_3,nonce_s_3),((dh_pub(a_2),nonce_c_3,dh_pub(b_2),nonce_s_3),hmac(hkdf(dh_shared(dh_pub(b_2),a_2),nonce_c_3,nonce_s_3),(dh_pub(a_2),nonce_c_3,dh_pub(b_2),nonce_s_3)))) at {18} in copy a_3
+
+event ClientAuth(dh_pub(sk_s_2),dh_pub(sk_c_2)) at {19} in copy a_3 (goal)
+
+The event ClientAuth(dh_pub(sk_s_2),dh_pub(sk_c_2)) is executed at {19} in copy a_3.
+A trace has been found.
+RESULT event(ClientAuth(pk_s_2,pk_c_1)) ==> event(ServerAuth(pk_s_2,pk_c_1)) is false.
+
+--------------------------------------------------------------
+Verification summary:
+
+Query not attacker(session_key_secret[]) is true.
+
+Query event(ClientAuth(pk_s_2,pk_c_1)) ==> event(ServerAuth(pk_s_2,pk_c_1)) is false.
+
+--------------------------------------------------------------
+

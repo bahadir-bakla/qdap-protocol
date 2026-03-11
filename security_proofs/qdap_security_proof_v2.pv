@@ -1,0 +1,121 @@
+(* ================================================================
+   QDAP Formal Security Proof v2 — ProVerif 2.05
+   Protocol: X25519 + Signatures + AES-256-GCM
+   Fix: Ephemeral keys signed with long-term keys (like TLS 1.3)
+   ================================================================ *)
+
+(* ---- DH ---- *)
+type G.
+type exponent.
+const g: G [data].
+fun exp(G, exponent): G.
+equation forall a: exponent, b: exponent;
+  exp(exp(g, a), b) = exp(exp(g, b), a).
+
+(* ---- Signatures (Ed25519) ---- *)
+type skey.
+type pkey.
+fun pk(skey): pkey.
+fun sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, sk: skey;
+  verify(sign(m, sk), m, pk(sk)) = true.
+
+(* ---- Symmetric encryption (AES-256-GCM) ---- *)
+fun enc(bitstring, bitstring): bitstring.
+reduc forall m: bitstring, k: bitstring;
+  dec(enc(m, k), k) = m.
+
+(* ---- Key derivation (HKDF-SHA256) ---- *)
+fun hkdf(G): bitstring.
+
+(* ---- G to bitstring for signing ---- *)
+fun G2b(G): bitstring [data].
+
+(* ---- Channel ---- *)
+free c: channel.
+
+(* ---- Secret message ---- *)
+free secret_msg: bitstring [private].
+
+(* ---- Events ---- *)
+event InitiatorSent(G, pkey).
+event ResponderReceived(G, pkey).
+event InitiatorDone(G, G, bitstring).
+event ResponderDone(G, G, bitstring).
+
+(* ================================================================
+   Initiator — signs ephemeral key with long-term sk_I
+   ================================================================ *)
+let Initiator(sk_I: skey, pk_R: pkey) =
+  new x: exponent;
+  let pk_x = exp(g, x) in
+  (* Sign ephemeral public key *)
+  let sig_x = sign(G2b(pk_x), sk_I) in
+  event InitiatorSent(pk_x, pk(sk_I));
+  out(c, (pk_x, sig_x));
+
+  (* Receive responder's ephemeral key + signature *)
+  in(c, (pk_y: G, sig_y: bitstring));
+  (* Verify responder's signature with known long-term key *)
+  if verify(sig_y, G2b(pk_y), pk_R) = true then
+
+  let sk = hkdf(exp(pk_y, x)) in
+  let ct = enc(secret_msg, sk) in
+  event InitiatorDone(pk_x, pk_y, sk);
+  out(c, ct).
+
+(* ================================================================
+   Responder — signs ephemeral key with long-term sk_R
+   ================================================================ *)
+let Responder(sk_R: skey, pk_I: pkey) =
+  new y: exponent;
+  let pk_y = exp(g, y) in
+
+  (* Receive initiator's ephemeral key + signature *)
+  in(c, (pk_x: G, sig_x: bitstring));
+  (* Verify initiator's signature *)
+  if verify(sig_x, G2b(pk_x), pk_I) = true then
+
+  event ResponderReceived(pk_x, pk_I);
+  let sig_y = sign(G2b(pk_y), sk_R) in
+  out(c, (pk_y, sig_y));
+
+  let sk = hkdf(exp(pk_x, y)) in
+  in(c, ct: bitstring);
+  let m = dec(ct, sk) in
+  event ResponderDone(pk_x, pk_y, sk).
+
+(* ================================================================
+   SECURITY QUERIES
+   ================================================================ *)
+
+(* Query 1: Session secrecy *)
+query attacker(secret_msg).
+
+(* Query 2: Session key secrecy *)
+query pk_x: G, pk_y: G, sk: bitstring;
+  event(InitiatorDone(pk_x, pk_y, sk)) ==> attacker(sk).
+
+(* Query 3: Mutual authentication *)
+query pk_x: G, pk_y: G, sk: bitstring, pk_I: pkey;
+  event(InitiatorDone(pk_x, pk_y, sk)) ==>
+  event(ResponderReceived(pk_x, pk_I)).
+
+(* Query 4: Replay resistance *)
+query pk_x: G, pk_y: G, sk: bitstring, pk_I: pkey;
+  event(ResponderDone(pk_x, pk_y, sk)) ==>
+  event(InitiatorSent(pk_x, pk_I)).
+
+(* ================================================================
+   MAIN — long-term keys generated once, shared out-of-band
+   ================================================================ *)
+process
+  new sk_I: skey;
+  new sk_R: skey;
+  (* Public keys are known to both parties (PKI / pre-shared) *)
+  out(c, pk(sk_I));
+  out(c, pk(sk_R));
+  (
+    (!Initiator(sk_I, pk(sk_R))) |
+    (!Responder(sk_R, pk(sk_I)))
+  )

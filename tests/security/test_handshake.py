@@ -1,14 +1,15 @@
 # tests/security/test_handshake.py
 
+import os
 import pytest
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from qdap.security.handshake import (
     generate_ephemeral_keypair,
     serialize_public_key,
     deserialize_public_key,
     compute_shared_secret,
     derive_session_keys,
-    build_client_hello,
-    build_server_hello,
+    build_hello_message,
     parse_hello,
     MSG_CLIENT_HELLO,
     MSG_SERVER_HELLO,
@@ -17,6 +18,14 @@ from qdap.security.handshake import (
 
 
 class TestX25519Handshake:
+
+    @pytest.fixture
+    def client_id(self):
+        return Ed25519PrivateKey.generate()
+
+    @pytest.fixture
+    def server_id(self):
+        return Ed25519PrivateKey.generate()
 
     def test_keypair_generation(self):
         """Her çağrıda farklı key üretilmeli."""
@@ -74,38 +83,48 @@ class TestX25519Handshake:
         keys2  = derive_session_keys(secret, b"\x02" * 16)
         assert keys1.data_key != keys2.data_key
 
-    def test_hello_wire_format(self):
+    def test_hello_wire_format(self, client_id, server_id):
         """Hello mesajları doğru formatlanmalı."""
         k = generate_ephemeral_keypair()
+        nonce = os.urandom(16)
 
-        client_hello = build_client_hello(k)
-        server_hello = build_server_hello(k)
+        client_hello = build_hello_message(MSG_CLIENT_HELLO, k, client_id, nonce)
+        server_hello = build_hello_message(MSG_SERVER_HELLO, k, server_id, nonce)
 
         assert len(client_hello) == HELLO_SIZE
         assert len(server_hello) == HELLO_SIZE
 
-        msg_type, pub = parse_hello(client_hello)
+        msg_type, pub, sig = parse_hello(client_hello)
         assert msg_type == MSG_CLIENT_HELLO
         assert len(pub) == 32
+        assert len(sig) == 64
 
-        msg_type, pub = parse_hello(server_hello)
+        msg_type, pub, sig = parse_hello(server_hello)
         assert msg_type == MSG_SERVER_HELLO
 
-    def test_full_handshake_simulation(self):
+    def test_full_handshake_simulation(self, client_id, server_id):
         """Alice-Bob tam handshake simülasyonu."""
         alice_priv = generate_ephemeral_keypair()
         bob_priv   = generate_ephemeral_keypair()
+        
+        salt_client = os.urandom(16)
+        salt_server = os.urandom(16)
 
         # Alice ClientHello gönderir
-        client_hello = build_client_hello(alice_priv)
-        _, alice_pub_bytes = parse_hello(client_hello)
+        client_hello = build_hello_message(MSG_CLIENT_HELLO, alice_priv, client_id, salt_client)
+        _, alice_pub_bytes, alice_sig = parse_hello(client_hello)
+        
+        # Bob doğrular
+        client_id.public_key().verify(alice_sig, alice_pub_bytes + salt_client)
 
         # Bob ServerHello gönderir
-        server_hello = build_server_hello(bob_priv)
-        _, bob_pub_bytes = parse_hello(server_hello)
+        server_hello = build_hello_message(MSG_SERVER_HELLO, bob_priv, server_id, salt_server)
+        _, bob_pub_bytes, bob_sig = parse_hello(server_hello)
+        
+        # Alice doğrular
+        server_id.public_key().verify(bob_sig, bob_pub_bytes + salt_server)
 
         # Her ikisi shared secret hesaplar
-        salt = b"\xAB" * 16
         alice_secret = compute_shared_secret(
             alice_priv, deserialize_public_key(bob_pub_bytes)
         )
@@ -114,8 +133,9 @@ class TestX25519Handshake:
         )
         assert alice_secret == bob_secret
 
-        alice_keys = derive_session_keys(alice_secret, salt)
-        bob_keys   = derive_session_keys(bob_secret, salt)
+        joint_salt = bytes(a ^ b for a, b in zip(salt_client, salt_server))
+        alice_keys = derive_session_keys(alice_secret, joint_salt)
+        bob_keys   = derive_session_keys(bob_secret, joint_salt)
 
         assert alice_keys.data_key  == bob_keys.data_key
         assert alice_keys.hmac_key  == bob_keys.hmac_key

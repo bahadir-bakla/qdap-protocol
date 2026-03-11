@@ -1,0 +1,157 @@
+(* qdap_handshake.pv
+   QDAP Güvenli El Sıkışma — ProVerif Formal Modeli
+   
+   Protokol:
+     1. Client → Server: ClientHello(g^a, nonce_c)
+     2. Server → Client: ServerHello(g^b, nonce_s, Cert_S)
+     3. Client → Server: Finished(HMAC(session_key, transcript))
+     4. Server → Client: Finished(HMAC(session_key, transcript))
+     5. [Mutual auth tamamlandı — Ghost Session başlar]
+   
+   X25519 DH: g^(ab) = shared secret
+   Session key: HKDF(g^(ab), nonce_c, nonce_s)
+*)
+
+(* ─── Kanal tanımları ─── *)
+free c: channel.               (* Genel (düşman erişebilir) ağ *)
+free s: channel [private].     (* Güvenli iç kanal (referans) *)
+
+(* ─── Tip tanımları ─── *)
+type key.
+type nonce.
+type cert.
+
+(* ─── Kriptografik ilkeller ─── *)
+(* DH key exchange *)
+fun dh_pub(key): key.          (* g^a → public key *)
+fun dh_shared(key, key): key.  (* g^(ab) = shared secret *)
+equation forall a: key, b: key;
+  dh_shared(dh_pub(a), b) = dh_shared(dh_pub(b), a).
+
+(* HKDF (key derivation) *)
+fun hkdf(key, nonce, nonce): key.
+
+(* AES-256-GCM (AEAD encryption) *)
+fun aead_enc(key, bitstring): bitstring.
+fun aead_dec(key, bitstring): bitstring.
+equation forall k: key, m: bitstring;
+  aead_dec(k, aead_enc(k, m)) = m.
+
+(* HMAC (message authentication) *)
+fun hmac(key, bitstring): bitstring.
+
+(* Sertifika *)
+fun sign(key, bitstring): bitstring.   (* Özel anahtar ile imzala *)
+reduc forall sk: key, m: bitstring;
+  verify(dh_pub(sk), sign(sk, m), m) = true.
+
+(* ─── Gizlilik hedefleri ─── *)
+free session_key_secret: key [private].   (* Session key gizli kalmalı *)
+query attacker(session_key_secret).       (* Saldırgan öğrenemez *)
+
+(* ─── Güvenlik olayları ─── *)
+event ClientAuth(key, key).    (* Client'ın kim olduğunu doğruladı *)
+event ServerAuth(key, key).    (* Server'ın kim olduğunu doğruladı *)
+event SessionEstablished(key). (* Güvenli oturum kuruldu *)
+
+(* ─── Mutual Authentication hedefi ─── *)
+(* Eğer client server'ı auth ettiyse, server gerçekten o public key'e sahip olmalı *)
+query pk_s: key, pk_c: key;
+  event(ClientAuth(pk_s, pk_c)) ==> event(ServerAuth(pk_s, pk_c)).
+
+(* ─── Forward Secrecy hedefi ─── *)
+(* Uzun vadeli key sızdırılsa bile session key güvende *)
+(* Bu PFS kanıtı ayrı qdap_forward_secrecy.pv dosyasında yapılıyor *)
+
+(* ─── Client süreci ─── *)
+let Client(sk_c: key, pk_s_expected: key) =
+  (* Ephemeral DH keypair üret *)
+  new a: key;
+  let pk_a = dh_pub(a) in
+
+  (* Nonce üret *)
+  new nonce_c: nonce;
+
+  (* ClientHello gönder *)
+  out(c, (pk_a, nonce_c));
+
+  (* ServerHello bekle *)
+  in(c, (pk_b: key, nonce_s: nonce, cert_s: bitstring));
+
+  (* Sertifikayı doğrula *)
+  if verify(pk_s_expected, cert_s, (pk_b, nonce_s)) = true then
+
+  (* Shared secret hesapla *)
+  let shared = dh_shared(pk_b, a) in
+
+  (* Session key türet *)
+  let sk_session = hkdf(shared, nonce_c, nonce_s) in
+
+  (* Server Finished doğrula *)
+  let transcript = (pk_a, nonce_c, pk_b, nonce_s) in
+  in(c, server_finished: bitstring);
+  if server_finished = hmac(sk_session, transcript) then
+
+  (* Client Finished gönder *)
+  out(c, hmac(sk_session, (transcript, server_finished)));
+
+  (* Authentication event *)
+  event ClientAuth(pk_s_expected, dh_pub(sk_c));
+  event SessionEstablished(sk_session);
+
+  (* Ghost Session başlat — şifreli mesajlar *)
+  in(c, ciphertext: bitstring);
+  let plaintext = aead_dec(sk_session, ciphertext) in
+  out(s, plaintext).
+
+
+(* ─── Server süreci ─── *)
+let Server(sk_s: key) =
+  let pk_s = dh_pub(sk_s) in
+
+  (* ClientHello bekle *)
+  in(c, (pk_a: key, nonce_c: nonce));
+
+  (* Ephemeral DH keypair üret *)
+  new b: key;
+  let pk_b = dh_pub(b) in
+  new nonce_s: nonce;
+
+  (* Sertifika oluştur *)
+  let cert_s = sign(sk_s, (pk_b, nonce_s)) in
+
+  (* ServerHello gönder *)
+  out(c, (pk_b, nonce_s, cert_s));
+
+  (* Shared secret hesapla *)
+  let shared = dh_shared(pk_a, b) in
+  let sk_session = hkdf(shared, nonce_c, nonce_s) in
+
+  (* Server Finished gönder *)
+  let transcript = (pk_a, nonce_c, pk_b, nonce_s) in
+  out(c, hmac(sk_session, transcript));
+
+  (* Client Finished doğrula *)
+  in(c, client_finished: bitstring);
+  if client_finished = hmac(sk_session, (transcript, hmac(sk_session, transcript))) then
+
+  event ServerAuth(pk_s, pk_a);
+  event SessionEstablished(sk_session);
+
+  (* Şifreli mesaj gönder *)
+  new msg: bitstring;
+  out(c, aead_enc(sk_session, msg)).
+
+
+(* ─── Ana süreç ─── *)
+process
+  (* Long-term keyleri üret *)
+  new sk_s: key;
+  new sk_c: key;
+  let pk_s = dh_pub(sk_s) in
+  let pk_c = dh_pub(sk_c) in
+
+  (* Paralel çalıştır — saldırgan c kanalını dinliyor *)
+  ( !Client(sk_c, pk_s)
+  | !Server(sk_s)
+  )

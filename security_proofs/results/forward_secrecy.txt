@@ -1,0 +1,90 @@
+Linear part:
+dh_shared(dh_pub(a),b) = dh_shared(dh_pub(b),a)
+Completing equations...
+Completed equations:
+dh_shared(dh_pub(a),b) = dh_shared(dh_pub(b),a)
+Convergent part:
+aead_dec(k,aead_enc(k,m)) = m
+Completing equations...
+Completed equations:
+aead_dec(k,aead_enc(k,m)) = m
+Process 0 (that is, the initial process):
+{1}new sk_s: key;
+{2}new sk_c: key;
+(
+    {3}!
+    {4}let sk_c_longterm: key = sk_c in
+    {5}let pk_s_expected: key = dh_pub(sk_s) in
+    {6}new a: key;
+    {7}let pk_a: key = dh_pub(a) in
+    {8}new nonce_c: nonce;
+    {9}out(c, (pk_a,nonce_c));
+    {10}in(c, (pk_b: key,nonce_s: nonce,cert_s: bitstring));
+    {11}if (verify(pk_s_expected,cert_s,(pk_b,nonce_s)) = true) then
+    {12}let shared: key = dh_shared(pk_b,a) in
+    {13}let sk_session: key = hkdf(shared,nonce_c,nonce_s) in
+    {14}event PastSessionKey(sk_session);
+    {15}out(c, aead_enc(sk_session,secret_message));
+    {16}event LeakLongTermKey(sk_c_longterm);
+    {17}out(c, sk_c_longterm)
+) | (
+    {18}!
+    {19}let sk_s_longterm: key = sk_s in
+    {20}let pk_s: key = dh_pub(sk_s_longterm) in
+    {21}in(c, (pk_a_1: key,nonce_c_1: nonce));
+    {22}new b: key;
+    {23}let pk_b_1: key = dh_pub(b) in
+    {24}new nonce_s_1: nonce;
+    {25}let cert_s_1: bitstring = sign(sk_s_longterm,(pk_b_1,nonce_s_1)) in
+    {26}out(c, (pk_b_1,nonce_s_1,cert_s_1));
+    {27}let shared_1: key = dh_shared(pk_a_1,b) in
+    {28}let sk_session_1: key = hkdf(shared_1,nonce_c_1,nonce_s_1) in
+    {29}in(c, ciphertext: bitstring);
+    {30}let plaintext: bitstring = aead_dec(sk_session_1,ciphertext) in
+    0
+)
+
+--  Process 1 (that is, process 0, with let moved downwards):
+{1}new sk_s: key;
+{2}new sk_c: key;
+(
+    {3}!
+    {6}new a: key;
+    {8}new nonce_c: nonce;
+    {7}let pk_a: key = dh_pub(a) in
+    {9}out(c, (pk_a,nonce_c));
+    {10}in(c, (pk_b: key,nonce_s: nonce,cert_s: bitstring));
+    {5}let pk_s_expected: key = dh_pub(sk_s) in
+    {11}if (verify(pk_s_expected,cert_s,(pk_b,nonce_s)) = true) then
+    {12}let shared: key = dh_shared(pk_b,a) in
+    {13}let sk_session: key = hkdf(shared,nonce_c,nonce_s) in
+    {14}event PastSessionKey(sk_session);
+    {15}out(c, aead_enc(sk_session,secret_message));
+    {4}let sk_c_longterm: key = sk_c in
+    {16}event LeakLongTermKey(sk_c_longterm);
+    {17}out(c, sk_c_longterm)
+) | (
+    {18}!
+    {21}in(c, (pk_a_1: key,nonce_c_1: nonce));
+    {22}new b: key;
+    {24}new nonce_s_1: nonce;
+    {23}let pk_b_1: key = dh_pub(b) in
+    {19}let sk_s_longterm: key = sk_s in
+    {25}let cert_s_1: bitstring = sign(sk_s_longterm,(pk_b_1,nonce_s_1)) in
+    {26}out(c, (pk_b_1,nonce_s_1,cert_s_1));
+    {29}in(c, ciphertext: bitstring)
+)
+
+-- Query not attacker(secret_message[]) in process 1.
+Translating the process into Horn clauses...
+Completing...
+Starting query not attacker(secret_message[])
+RESULT not attacker(secret_message[]) is true.
+
+--------------------------------------------------------------
+Verification summary:
+
+Query not attacker(secret_message[]) is true.
+
+--------------------------------------------------------------
+

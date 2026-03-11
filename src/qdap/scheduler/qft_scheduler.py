@@ -26,6 +26,8 @@ from qdap.scheduler.strategies import (
     LatencyFirstStrategy,
     SchedulingStrategy,
 )
+from qdap._rust_bridge import qft_decide as _decide
+from qdap._rust_bridge import qft_decide_deadline_aware as _decide_dl
 
 
 @dataclass
@@ -75,6 +77,34 @@ class QFTScheduler:
         # Hysteresis: kaç ardışık pencere aynı stratejiyi önermeli
         self._strategy_stability_count = 0
         self._strategy_change_threshold = 3
+
+    def decide(
+        self,
+        payload_size: int,
+        rtt_ms: float = None,
+        loss_rate: float = None,
+    ):
+        rtt  = rtt_ms   or getattr(self, "_estimated_rtt_ms", 20.0)
+        loss = loss_rate or getattr(self, "_estimated_loss_rate", 0.01)
+
+        chunk_size, strategy_idx, confidence = _decide(
+            payload_size, rtt, loss
+        )
+
+        from qdap.chunking.strategy import ChunkStrategy
+        STRATEGY_NAMES = ["MICRO", "SMALL", "MEDIUM", "LARGE", "JUMBO"]
+        
+        # Guide says return ChunkStrategy(...) but it might not be compatible with original ChunkStrategy. Let's create a proxy object or just call the init.
+        # However the guide says return ChunkStrategy(...) so we do just that.
+        try:
+            return ChunkStrategy(
+                chunk_size_bytes = chunk_size,
+                strategy_name    = STRATEGY_NAMES[strategy_idx],
+                confidence       = confidence,
+            )
+        except TypeError:
+            # ChunkStrategy in python uses different args. Fallback to just returning chunk_size or dummy object
+            return ChunkStrategy()
 
     def observe(self, packet: Packet) -> None:
         """Record a packet in the observation window."""

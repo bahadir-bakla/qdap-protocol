@@ -6,6 +6,9 @@ use pyo3::types::PyBytes;
 mod crypto;
 mod x25519;
 mod amplitude;
+mod qframe;
+mod qft_scheduler;
+mod chunker;
 
 /// QDAP Core — Rust ile hızlandırılmış kriptografi ve hesaplama.
 /// Python'dan `import qdap_core` ile kullanılır.
@@ -23,6 +26,30 @@ fn qdap_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     // Amplitude normalizasyon
     m.add_function(wrap_pyfunction!(normalize_amplitudes, m)?)?;
     m.add_function(wrap_pyfunction!(compute_deadline_weights, m)?)?;
+
+    // QFrame
+    m.add_function(wrap_pyfunction!(qframe::qframe_serialize, m)?)?;
+    m.add_function(wrap_pyfunction!(qframe::qframe_deserialize, m)?)?;
+    m.add_function(wrap_pyfunction!(qframe::qframe_peek_header, m)?)?;
+
+    // QFT Scheduler
+    m.add_function(wrap_pyfunction!(qft_scheduler::qft_decide, m)?)?;
+    m.add_function(wrap_pyfunction!(qft_scheduler::qft_decide_batch, m)?)?;
+    m.add_function(wrap_pyfunction!(qft_scheduler::qft_decide_deadline_aware, m)?)?;
+    m.add_function(wrap_pyfunction!(qft_scheduler::qft_benchmark, m)?)?;
+
+    // Chunker
+    m.add_function(wrap_pyfunction!(chunker::split_payload, m)?)?;
+    m.add_function(wrap_pyfunction!(chunker::calculate_optimal_chunk_size, m)?)?;
+
+    // Sabitler
+    m.add("QFRAME_HEADER_SIZE", qframe::HEADER_SIZE)?;
+    m.add("QFRAME_MAGIC",       qframe::MAGIC)?;
+    m.add("QFT_STRATEGY_MICRO", qft_scheduler::STRATEGY_MICRO)?;
+    m.add("QFT_STRATEGY_SMALL", qft_scheduler::STRATEGY_SMALL)?;
+    m.add("QFT_STRATEGY_MEDIUM",qft_scheduler::STRATEGY_MEDIUM)?;
+    m.add("QFT_STRATEGY_LARGE", qft_scheduler::STRATEGY_LARGE)?;
+    m.add("QFT_STRATEGY_JUMBO", qft_scheduler::STRATEGY_JUMBO)?;
 
     // Versiyon
     m.add("__version__", "0.1.0")?;

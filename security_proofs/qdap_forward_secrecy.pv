@@ -1,0 +1,76 @@
+(* qdap_forward_secrecy.pv
+   PFS Kanıtı: Long-term key sızdırılsa bile geçmiş session'lar güvende.
+*)
+
+(* Temel kanallar ve tipler *)
+free c: channel.
+type key.
+type nonce.
+
+(* DH *)
+fun dh_pub(key): key.
+fun dh_shared(key, key): key.
+equation forall a: key, b: key;
+  dh_shared(dh_pub(a), b) = dh_shared(dh_pub(b), a).
+
+fun hkdf(key, nonce, nonce): key.
+fun aead_enc(key, bitstring): bitstring.
+fun aead_dec(key, bitstring): bitstring.
+equation forall k: key, m: bitstring;
+  aead_dec(k, aead_enc(k, m)) = m.
+
+(* Gizli mesaj — saldırgan öğrenememeli *)
+free secret_message: bitstring [private].
+query attacker(secret_message).
+
+(* Long-term key sızdıktan sonra session key hâlâ gizli mi? *)
+(* Gizliliği zaten query attacker(secret_message) ile test ediyoruz *)
+event LeakLongTermKey(key).
+event PastSessionKey(key).
+
+(* Sertifika / Imza ekliyoruz ki MITM olmasın *)
+fun sign(key, bitstring): bitstring.
+reduc forall sk: key, m: bitstring;
+  verify(dh_pub(sk), sign(sk, m), m) = true.
+
+let PFSClient(sk_c_longterm: key, pk_s_expected: key) =
+  new a: key;
+  let pk_a = dh_pub(a) in
+  new nonce_c: nonce;
+  out(c, (pk_a, nonce_c));
+
+  in(c, (pk_b: key, nonce_s: nonce, cert_s: bitstring));
+  if verify(pk_s_expected, cert_s, (pk_b, nonce_s)) = true then
+  
+  let shared    = dh_shared(pk_b, a) in
+  let sk_session = hkdf(shared, nonce_c, nonce_s) in
+
+  event PastSessionKey(sk_session);
+  out(c, aead_enc(sk_session, secret_message));
+
+  event LeakLongTermKey(sk_c_longterm);
+  out(c, sk_c_longterm).
+
+
+let PFSServer(sk_s_longterm: key) =
+  let pk_s = dh_pub(sk_s_longterm) in
+  in(c, (pk_a: key, nonce_c: nonce));
+  
+  new b: key;
+  let pk_b = dh_pub(b) in
+  new nonce_s: nonce;
+  let cert_s = sign(sk_s_longterm, (pk_b, nonce_s)) in
+  
+  out(c, (pk_b, nonce_s, cert_s));
+
+  let shared     = dh_shared(pk_a, b) in
+  let sk_session = hkdf(shared, nonce_c, nonce_s) in
+
+  in(c, ciphertext: bitstring);
+  let plaintext = aead_dec(sk_session, ciphertext) in
+  0.   (* Mesajı aldı *)
+
+process
+  new sk_s: key;
+  new sk_c: key;
+  (!PFSClient(sk_c, dh_pub(sk_s)) | !PFSServer(sk_s))

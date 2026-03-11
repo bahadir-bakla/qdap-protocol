@@ -234,9 +234,12 @@ async def run_all(host: str, measured_rtt_ms: float):
                 await reset_stats(host)
                 await asyncio.sleep(0.5)
                 try:
-                    result = await run_fn()
+                    result = await asyncio.wait_for(run_fn(), timeout=60.0)
                     runs.append(result.throughput_mbps)
                     print(f"  {proto_name} run {i+1}: {result.throughput_mbps:.3f} Mbps")
+                except asyncio.TimeoutError:
+                    print(f"  {proto_name} run {i+1}: TIMEOUT (>60s), skipping payload.")
+                    runs.append(0.0)
                 except Exception as e:
                     print(f"  {proto_name} run {i+1}: ERROR {e}")
                     runs.append(0.0)

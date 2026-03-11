@@ -1,0 +1,113 @@
+(* ================================================================
+   QDAP Formal Security Proof v3 — ProVerif 2.05
+   Fix: Session binding — responder signs (pk_x, pk_y) together
+   This prevents session confusion attacks.
+   ================================================================ *)
+
+type G.
+type exponent.
+const g: G [data].
+fun exp(G, exponent): G.
+equation forall a: exponent, b: exponent;
+  exp(exp(g, a), b) = exp(exp(g, b), a).
+
+(* Signatures *)
+type skey.
+type pkey.
+fun pk(skey): pkey.
+fun sign(bitstring, skey): bitstring.
+reduc forall m: bitstring, sk: skey;
+  verify(sign(m, sk), m, pk(sk)) = true.
+
+(* AES-256-GCM *)
+fun enc(bitstring, bitstring): bitstring.
+reduc forall m: bitstring, k: bitstring;
+  dec(enc(m, k), k) = m.
+
+(* HKDF-SHA256 *)
+fun hkdf(G): bitstring.
+
+(* Concatenation for signing *)
+fun G2b(G): bitstring [data].
+fun pair2b(G, G): bitstring [data].  (* bind both keys together *)
+
+free c: channel.
+free secret_msg: bitstring [private].
+
+event InitiatorSent(G, pkey).
+event ResponderReceived(G, pkey).
+event InitiatorDone(G, G, bitstring).
+event ResponderDone(G, G, bitstring).
+
+(* ================================================================
+   Initiator
+   ================================================================ *)
+let Initiator(sk_I: skey, pk_R: pkey) =
+  new x: exponent;
+  let pk_x = exp(g, x) in
+  let sig_x = sign(G2b(pk_x), sk_I) in
+  event InitiatorSent(pk_x, pk(sk_I));
+  out(c, (pk_x, sig_x));
+
+  in(c, (pk_y: G, sig_y: bitstring));
+  (* Verify: responder signed BOTH keys — binding to this session *)
+  if verify(sig_y, pair2b(pk_x, pk_y), pk_R) = true then
+
+  let sk = hkdf(exp(pk_y, x)) in
+  let ct = enc(secret_msg, sk) in
+  event InitiatorDone(pk_x, pk_y, sk);
+  out(c, ct).
+
+(* ================================================================
+   Responder
+   ================================================================ *)
+let Responder(sk_R: skey, pk_I: pkey) =
+  new y: exponent;
+  let pk_y = exp(g, y) in
+
+  in(c, (pk_x: G, sig_x: bitstring));
+  if verify(sig_x, G2b(pk_x), pk_I) = true then
+
+  event ResponderReceived(pk_x, pk_I);
+  (* Sign BOTH keys — binds response to this specific initiator *)
+  let sig_y = sign(pair2b(pk_x, pk_y), sk_R) in
+  out(c, (pk_y, sig_y));
+
+  let sk = hkdf(exp(pk_x, y)) in
+  in(c, ct: bitstring);
+  let m = dec(ct, sk) in
+  event ResponderDone(pk_x, pk_y, sk).
+
+(* ================================================================
+   SECURITY QUERIES
+   ================================================================ *)
+
+(* Q1: Session secrecy *)
+query attacker(secret_msg).
+
+(* Q2: Session key secrecy *)
+query pk_x: G, pk_y: G, sk: bitstring;
+  event(InitiatorDone(pk_x, pk_y, sk)) ==> attacker(sk).
+
+(* Q3: Mutual authentication — now with session binding *)
+query pk_x: G, pk_y: G, sk: bitstring, pk_I: pkey;
+  event(InitiatorDone(pk_x, pk_y, sk)) ==>
+  event(ResponderReceived(pk_x, pk_I)).
+
+(* Q4: Replay resistance *)
+query pk_x: G, pk_y: G, sk: bitstring, pk_I: pkey;
+  event(ResponderDone(pk_x, pk_y, sk)) ==>
+  event(InitiatorSent(pk_x, pk_I)).
+
+(* ================================================================
+   MAIN
+   ================================================================ *)
+process
+  new sk_I: skey;
+  new sk_R: skey;
+  out(c, pk(sk_I));
+  out(c, pk(sk_R));
+  (
+    (!Initiator(sk_I, pk(sk_R))) |
+    (!Responder(sk_R, pk(sk_I)))
+  )

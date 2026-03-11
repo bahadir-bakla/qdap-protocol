@@ -196,9 +196,8 @@ async def main():
     print("  19603/TCP — Stats/Control")
     print("\nBu pencereyi açık bırak — Mac'ten bağlantı bekleniyor...")
 
-    async with asyncio.TaskGroup() as tg:
-        for s in servers:
-            tg.create_task(s.serve_forever())
+    async with servers[0], servers[1], servers[2], servers[3]:
+        await asyncio.gather(*(s.serve_forever() for s in servers))
 
 
 if __name__ == "__main__":

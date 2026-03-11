@@ -18,6 +18,13 @@ digest    = "0.10"
 x25519-dalek = { version = "2.0", features = ["static_secrets"] }
 rand      = "0.8"
 
+# QFrame serialization
+byteorder = "1.5"      # little/big endian helpers
+bytes     = "1.5"      # zero-copy byte buffers
+
+# QFT Scheduler
+libm = "0.2"           # no_std math (cos, sin, sqrt)
+
 # SIMD için
 packed_simd_2 = { version = "0.3", optional = true }
 

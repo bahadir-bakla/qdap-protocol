@@ -35,6 +35,9 @@ from typing import Optional
 
 import numpy as np
 
+from qdap._rust_bridge import qframe_serialize as _serialize
+from qdap._rust_bridge import qframe_deserialize as _deserialize
+
 
 class SubframeType(IntEnum):
     """QFrame subframe type codes — analogous to quantum basis states."""
@@ -304,3 +307,25 @@ class QFrame:
             f"session={self.session_id:#x}, subframes={self.subframe_count}, "
             f"amplitudes={self.amplitude_vector})"
         )
+
+    def to_bytes(self) -> bytes:
+        return _serialize(
+            payload=getattr(self, "payload", b""),
+            priority=getattr(self, "priority", 0),
+            deadline_ms=getattr(self, "deadline_ms", 500.0),
+            sequence_number=getattr(self, "sequence_number", 0),
+            frame_type=int(self.frame_type),
+        )
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "QFrame":
+        payload, priority, deadline_ms, seq_num, frame_type, hash_valid = \
+            _deserialize(data)
+        frame = cls.__new__(cls)
+        frame.payload         = payload
+        frame.priority        = priority
+        frame.deadline_ms     = deadline_ms
+        frame.sequence_number = seq_num
+        frame.frame_type      = frame_type
+        frame.hash_valid      = hash_valid
+        return frame
