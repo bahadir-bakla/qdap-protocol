@@ -1,0 +1,4 @@
+# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/websocket/ws_adapter.py
+# hypothesis_version: 6.151.9
+
+[10.0, 60.0, 1011, 8765, 19601, '--no-security', '--qdap-host', '--qdap-port', '--verbose', '--ws-port', '0.0.0.0', '__main__', 'qdap.ws', 'store_true', 'utf-8']

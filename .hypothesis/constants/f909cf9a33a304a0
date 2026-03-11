@@ -1,0 +1,4 @@
+# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/websocket/priority_rules.py
+# hypothesis_version: 6.151.9
+
+[10.0, 20.0, 50.0, 100.0, 500.0, 2000.0, 5000.0, 10000.0, 100, 200, 300, 500, 700, 800, 850, 900, 1000, 'alarm', 'alert', 'audio', 'command', 'data', 'emergency', 'log', 'ping', 'sensor', 'telemetry', 'type', 'utf-8', 'video']

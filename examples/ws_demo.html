@@ -1,0 +1,56 @@
+<!-- examples/ws_demo.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>QDAP WebSocket Demo</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        button { margin: 5px; padding: 10px; cursor: pointer; }
+        pre { background: #eee; padding: 10px; border: 1px solid #ccc; max-height: 400px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+<h2>QDAP WebSocket Bridge Demo</h2>
+
+<button onclick="sendSensor()">📡 Sensor (priority=500)</button>
+<button onclick="sendEmergency()">🚨 Emergency (priority=1000)</button>
+<button onclick="sendLog()">📝 Log (priority=100)</button>
+
+<pre id="log"></pre>
+
+<script>
+const ws = new WebSocket("ws://localhost:8765");
+const log = document.getElementById("log");
+
+ws.onopen = () => {
+    log.innerHTML += "<strong>Connected to QDAP WS Adapter</strong>\n";
+};
+
+ws.onclose = () => {
+    log.innerHTML += "<strong>Connection closed</strong>\n";
+};
+
+ws.onerror = (e) => {
+    log.innerHTML += "<strong>Error: " + e + "</strong>\n";
+};
+
+ws.onmessage = e => {
+  log.textContent += "← " + e.data + "\n";
+};
+
+function send(type, data) {
+  if (ws.readyState !== WebSocket.OPEN) {
+      log.textContent += "⚠️ WebSocket is not open!\n";
+      return;
+  }
+  const msg = JSON.stringify({type, ...data, ts: Date.now()});
+  ws.send(msg);
+  log.textContent += "→ " + msg + "\n";
+}
+
+const sendSensor    = () => send("sensor",    {value: Math.random()});
+const sendEmergency = () => send("emergency", {alert: "FIRE!"});
+const sendLog       = () => send("log",       {msg: "debug info"});
+</script>
+</body>
+</html>
