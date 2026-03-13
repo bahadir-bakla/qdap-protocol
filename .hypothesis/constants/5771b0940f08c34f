@@ -1,4 +1,0 @@
-# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/chunking/strategy.py
-# hypothesis_version: 6.151.9
-
-[0.35, 0.5, 0.7, 256, 1024, 'ChunkStrategy', 'LARGE (256KB) — bulk', 'SMALL (16KB) — RPC', 'UNKNOWN']

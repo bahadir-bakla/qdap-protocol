@@ -1,4 +1,0 @@
-# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/examples/video/stream_server.py
-# hypothesis_version: 6.151.9
-
-[0.999, 1.0, 10.0, 16.0, 100.0, 1000000.0, 1000, 2000, 'audio_ahead_rate', 'current_quality', 'frame_count', 'quality_stability', 'send_p99_ms']

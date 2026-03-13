@@ -1,4 +1,0 @@
-# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/examples/iot/gateway.py
-# hypothesis_version: 6.151.9
-
-[0.05, 30.0, 1000.0, 1000000.0, 10000, 19100, '127.0.0.1', 'alert_mean_ms', 'alert_p99_ms', 'alert_readings', 'frames_sent', 'routine_mean_ms', 'routine_p99_ms', 'total_readings']

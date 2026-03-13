@@ -1,4 +1,0 @@
-# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/proxy/priority_mapper.py
-# hypothesis_version: 6.151.9
-
-[10.0, 50.0, 100.0, 500.0, 2000.0, 100, 200, 300, 500, 900, 950, 1000, '*', 'X-QDAP-Deadline-Ms', 'X-QDAP-Priority', 'application/', 'application/json', 'application/xml', 'audio/', 'image/', 'text/', 'video/']

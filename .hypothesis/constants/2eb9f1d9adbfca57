@@ -1,4 +1,0 @@
-# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/proxy/proxy_server.py
-# hypothesis_version: 6.151.9
-
-[5.0, 10.0, 1000.0, 502, 504, 8080, 8081, 19601, '*', '--listen-port', '--mode', '--no-security', '--qdap-host', '--qdap-port', '--target-host', '--target-port', '--verbose', '/{path:.*}', '0.0.0.0', 'QDAP HTTP Proxy', 'QDAP gateway timeout', '__main__', 'client', 'localhost', 'qdap.proxy', 'server', 'store_true']

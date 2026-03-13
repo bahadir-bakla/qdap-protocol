@@ -18,7 +18,14 @@ log = logging.getLogger(__name__)
 
 try:
     import qdap_core as _rust
-    RUST_AVAILABLE = True
+    # Verify it's the real compiled Rust extension, not a namespace package
+    # from the qdap_core/ source directory
+    if hasattr(_rust, "hash_frame"):
+        RUST_AVAILABLE = True
+    else:
+        _rust = None
+        RUST_AVAILABLE = False
+        log.debug("qdap_core imported but missing Rust symbols — using pure Python fallback")
 except ImportError:
     _rust = None
     RUST_AVAILABLE = False

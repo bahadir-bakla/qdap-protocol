@@ -1,4 +1,0 @@
-# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/security/handshake.py
-# hypothesis_version: 6.151.9
-
-[b'qdap-v1-session-id', 10.0, 102, 'asyncio.StreamReader', 'asyncio.StreamWriter']

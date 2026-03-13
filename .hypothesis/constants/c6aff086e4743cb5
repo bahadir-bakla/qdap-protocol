@@ -1,4 +1,0 @@
-# file: /Users/bahadirselimbakla/Desktop/quantum-protocol/src/qdap/security/constants.py
-# hypothesis_version: 6.151.9
-
-[b'QDAP', b'RKEY', b'qdap-v1-ctrl-key', b'qdap-v1-data-key', b'qdap-v1-hmac-key', 300.0, 128, 1000, 'sha256']

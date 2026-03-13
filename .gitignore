@@ -27,6 +27,7 @@ env/
 .coverage
 htmlcov/
 *.coveragerc
+.hypothesis/
 
 # IDE
 .vscode/
@@ -36,9 +37,9 @@ htmlcov/
 .DS_Store
 
 # Docker
-docker_benchmark/results/*.json.bak
+docker_benchmark/results/
 
-# Certificates (güvenlik)
+# Certificates (security)
 *.pem
 *.key
 certs/
@@ -47,7 +48,8 @@ certs/
 .ipynb_checkpoints/
 *.ipynb
 
-# Benchmark geçici dosyalar
+# Benchmark results (generated)
+benchmarks/results/
 benchmarks/tmp/
 wan_benchmark/results/
 
@@ -58,7 +60,11 @@ wan_benchmark/results/
 .terraform/
 *.tfstate
 *.tfstate.*
+.terraform.lock.hcl
 crash.log
 crash.*.log
 *.tfvars
 *.tfvars.json
+
+# Gemini
+.gemini/
