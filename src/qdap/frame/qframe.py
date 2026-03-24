@@ -329,3 +329,34 @@ class QFrame:
         frame.frame_type      = frame_type
         frame.hash_valid      = hash_valid
         return frame
+
+
+# ── Session management control frames ────────────────────────────────────────
+
+FRAME_SESSION_TICKET = 0x07  # Server → Client: SESSION_TICKET
+FRAME_SESSION_RESUME = 0x08  # Client → Server: SESSION_RESUME
+
+# Simple control frame wire format: [type(1)][length(4)][payload(N)]
+_CTRL_HEADER = ">BI"  # type(1) + length(4) = 5 bytes
+_CTRL_HEADER_SIZE = struct.calcsize(_CTRL_HEADER)
+
+
+def build_control_frame(frame_type: int, payload: bytes) -> bytes:
+    """
+    Minimal control frame for session management messages (SESSION_TICKET, SESSION_RESUME).
+    Wire format: [frame_type(1)][payload_length(4)][payload(N)]
+    """
+    return struct.pack(_CTRL_HEADER, frame_type, len(payload)) + payload
+
+
+def parse_control_frame(data: bytes) -> tuple[int, bytes]:
+    """
+    Parse a control frame.
+    Returns: (frame_type, payload)
+    Raises ValueError if data is too short.
+    """
+    if len(data) < _CTRL_HEADER_SIZE:
+        raise ValueError(f"Control frame too short: {len(data)} < {_CTRL_HEADER_SIZE}")
+    frame_type, length = struct.unpack_from(_CTRL_HEADER, data)
+    payload = data[_CTRL_HEADER_SIZE:_CTRL_HEADER_SIZE + length]
+    return frame_type, payload

@@ -170,6 +170,7 @@ class QDAPHTTPProxy:
             site = web.TCPSite(runner, "0.0.0.0", self.listen_port)
             await site.start()
             log.info(f"✅ QDAP HTTP Proxy (CLIENT) → 0.0.0.0:{self.listen_port}")
+            await asyncio.Future()  # Keep alive
         else:
             server = await asyncio.start_server(
                 self.handle_qdap_connection, "0.0.0.0", self.listen_port
@@ -181,8 +182,8 @@ class QDAPHTTPProxy:
 
 def main():
     parser = argparse.ArgumentParser(description="QDAP HTTP Proxy")
-    parser.add_argument("--listen-port",  type=int, default=8080)
-    parser.add_argument("--qdap-host",    required=True)
+    parser.add_argument("--listen-port", "--port", type=int, default=8080)
+    parser.add_argument("--qdap-host",    default="localhost")
     parser.add_argument("--qdap-port",    type=int, default=19601)
     parser.add_argument("--target-host",  default="localhost")
     parser.add_argument("--target-port",  type=int, default=8081)

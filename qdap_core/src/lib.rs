@@ -37,10 +37,13 @@ fn qdap_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(qft_scheduler::qft_decide_batch, m)?)?;
     m.add_function(wrap_pyfunction!(qft_scheduler::qft_decide_deadline_aware, m)?)?;
     m.add_function(wrap_pyfunction!(qft_scheduler::qft_benchmark, m)?)?;
+    m.add_function(wrap_pyfunction!(qft_scheduler::qft_load_theta, m)?)?;
+    m.add_function(wrap_pyfunction!(qft_scheduler::qft_dump_theta, m)?)?;
 
     // Chunker
     m.add_function(wrap_pyfunction!(chunker::split_payload, m)?)?;
     m.add_function(wrap_pyfunction!(chunker::calculate_optimal_chunk_size, m)?)?;
+    m.add_function(wrap_pyfunction!(chunker::plan_parallel_chunks, m)?)?;
 
     // Sabitler
     m.add("QFRAME_HEADER_SIZE", qframe::HEADER_SIZE)?;

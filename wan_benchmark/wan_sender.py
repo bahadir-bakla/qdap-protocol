@@ -20,6 +20,19 @@ import statistics
 import pathlib
 from dataclasses import dataclass
 
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey, Ed25519PublicKey,
+)
+from cryptography.hazmat.primitives.serialization import (
+    Encoding, PublicFormat,
+)
+
+# Demo: her çalışmada ephemeral Ed25519 identity key üret
+_CLIENT_IDENTITY = Ed25519PrivateKey.generate()
+_CLIENT_PUB_BYTES = _CLIENT_IDENTITY.public_key().public_bytes(
+    Encoding.Raw, PublicFormat.Raw
+)
+
 
 ACK_SIZE = 8
 
@@ -164,8 +177,14 @@ async def run_secure(
 
     r, w = await asyncio.open_connection(host, 19602)
 
-    # Handshake
-    session_keys = await perform_client_handshake(r, w)
+    # Key exchange: server pub key al (32 byte) → client pub key gönder
+    server_pub_raw = await asyncio.wait_for(r.readexactly(32), timeout=10.0)
+    server_pub = Ed25519PublicKey.from_public_bytes(server_pub_raw)
+    w.write(_CLIENT_PUB_BYTES)
+    await w.drain()
+
+    # eCK-model mutual handshake
+    session_keys = await perform_client_handshake(r, w, _CLIENT_IDENTITY, server_pub)
     encryptor    = FrameEncryptor(session_keys.data_key)
 
     for _ in range(n):
@@ -212,11 +231,28 @@ PAYLOAD_CONFIGS = [
 N_RUNS = 3
 
 
-async def run_all(host: str, measured_rtt_ms: float):
+async def _run_proto(proto_name: str, host: str, n: int, size: int):
+    """Protocol adına göre doğru run_ fonksiyonunu çağır."""
+    if proto_name == "Classical":
+        return await run_classical(host, n, size)
+    elif proto_name == "Ghost":
+        return await run_ghost(host, n, size)
+    elif proto_name == "Secure":
+        return await run_secure(host, n, size)
+    else:
+        raise ValueError(f"Unknown protocol: {proto_name}")
+
+
+async def run_all(host: str, measured_rtt_ms: float,
+                  protocols: list = None):
+    if protocols is None:
+        protocols = ["Classical", "Ghost", "Secure"]
+
     print(f"\n{'='*60}")
-    print(f"  WAN Benchmark: Mac → Windows")
+    print(f"  WAN Benchmark: Ireland → Singapore")
     print(f"  Host: {host}  |  RTT: {measured_rtt_ms:.1f}ms")
-    print(f"  3 protokol × {len(PAYLOAD_CONFIGS)} boyut × {N_RUNS} run")
+    print(f"  Protocols: {', '.join(protocols)}")
+    print(f"  {len(PAYLOAD_CONFIGS)} payload sizes × {N_RUNS} runs each")
     print(f"{'='*60}\n")
 
     all_results = []
@@ -224,66 +260,70 @@ async def run_all(host: str, measured_rtt_ms: float):
     for label, size, n in PAYLOAD_CONFIGS:
         print(f"[{label}] payload={size}B, n={n}")
 
-        for proto_name, run_fn in [
-            ("Classical", lambda: run_classical(host, n, size)),
-            ("Ghost",     lambda: run_ghost(host, n, size)),
-            ("Secure",    lambda: run_secure(host, n, size)),
-        ]:
+        for proto_name in protocols:
             runs = []
             for i in range(N_RUNS):
                 await reset_stats(host)
                 await asyncio.sleep(0.5)
                 try:
-                    result = await asyncio.wait_for(run_fn(), timeout=60.0)
+                    result = await asyncio.wait_for(
+                        _run_proto(proto_name, host, n, size), timeout=90.0
+                    )
                     runs.append(result.throughput_mbps)
                     print(f"  {proto_name} run {i+1}: {result.throughput_mbps:.3f} Mbps")
                 except asyncio.TimeoutError:
-                    print(f"  {proto_name} run {i+1}: TIMEOUT (>60s), skipping payload.")
+                    print(f"  {proto_name} run {i+1}: TIMEOUT (>90s)")
                     runs.append(0.0)
                 except Exception as e:
                     print(f"  {proto_name} run {i+1}: ERROR {e}")
                     runs.append(0.0)
 
             median = sorted(runs)[N_RUNS // 2]
-            ack    = 0 if "Ghost" in proto_name or "Secure" in proto_name else n * ACK_SIZE
+            ack    = 0 if proto_name in ("Ghost", "Secure") else n * ACK_SIZE
 
             all_results.append({
-                "label":          label,
-                "payload_size":   size,
-                "protocol":       proto_name,
-                "tput_runs":      [round(r, 3) for r in runs],
-                "tput_median":    round(median, 3),
-                "ack_bytes":      ack,
+                "label":        label,
+                "payload_size": size,
+                "protocol":     proto_name,
+                "tput_runs":    [round(r, 3) for r in runs],
+                "tput_median":  round(median, 3),
+                "ack_bytes":    ack,
             })
 
         print()
 
     # Karşılaştırma tablosu
-    print(f"\n{'Label':<8} {'Classical':>12} {'Ghost':>12} {'Secure':>12} {'Ghost/Cls':>10}")
-    print("-" * 60)
+    col_protos = protocols
+    header = f"{'Label':<8}" + "".join(f" {p:>12}" for p in col_protos) + f"  {'Ghost/Cls':>10}"
+    print(f"\n{header}")
+    print("-" * len(header))
     for label in [c[0] for c in PAYLOAD_CONFIGS]:
         row = {r["protocol"]: r["tput_median"]
                for r in all_results if r["label"] == label}
-        cls    = row.get("Classical", 0)
-        ghost  = row.get("Ghost", 0)
-        secure = row.get("Secure", 0)
-        ratio  = ghost / max(cls, 0.001)
-        print(f"{label:<8} {cls:>10.3f}M {ghost:>10.3f}M {secure:>10.3f}M {ratio:>9.2f}×")
+        line = f"{label:<8}"
+        for p in col_protos:
+            line += f" {row.get(p, 0):>10.3f}M"
+        cls   = row.get("Classical", 0)
+        ghost = row.get("Ghost", 0)
+        ratio = ghost / max(cls, 0.001) if cls > 0 else 0
+        line += f"  {ratio:>9.2f}×"
+        print(line)
 
     # JSON kaydet
     output = {
         "metadata": {
-            "timestamp":        time.strftime("%Y-%m-%dT%H:%M:%S"),
-            "test_type":        "Hardware validation — 802.11ac WiFi LAN (two physical machines, same AP, no simulation)",
-            "sender":           "Mac (WiFi)",
-            "receiver":         "Windows (WiFi, same AP)",
-            "measured_rtt_ms":  measured_rtt_ms,
-            "n_runs":           N_RUNS,
-            "median_reported":  True,
-            "note":             (
-                "Real hardware test on physical network.\n"
-                "No artificial delay or packet loss.\n"
-                "Validates protocol behavior on real WiFi stack."
+            "timestamp":       time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "test_type":       "Cloud WAN — Ireland (eu-west-1) → Singapore (ap-southeast-1)",
+            "sender":          "EC2 t3.micro eu-west-1",
+            "receiver":        "EC2 t3.micro ap-southeast-1",
+            "measured_rtt_ms": measured_rtt_ms,
+            "protocols_tested": protocols,
+            "n_runs":          N_RUNS,
+            "median_reported": True,
+            "note": (
+                "Real AWS inter-region WAN test.\n"
+                "No artificial delay or packet loss simulation.\n"
+                "Validates QDAP over real internet path."
             ),
         },
         "results": all_results,
@@ -301,9 +341,15 @@ async def run_all(host: str, measured_rtt_ms: float):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--host", required=True,
-                        help="Windows IP adresi (örn: 192.168.137.1)")
+                        help="Receiver IP (örn: 18.142.108.197)")
     parser.add_argument("--rtt",  type=float, default=0,
                         help="ping ile ölçülen RTT ms")
+    parser.add_argument(
+        "--protocols",
+        default="Classical,Ghost,Secure",
+        help="Çalıştırılacak protokoller (virgülle): Classical,Ghost,Secure",
+    )
     args = parser.parse_args()
 
-    asyncio.run(run_all(args.host, args.rtt))
+    proto_list = [p.strip() for p in args.protocols.split(",") if p.strip()]
+    asyncio.run(run_all(args.host, args.rtt, proto_list))

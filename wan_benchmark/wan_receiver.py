@@ -15,6 +15,19 @@ import json
 import pathlib
 from collections import defaultdict
 
+from cryptography.hazmat.primitives.asymmetric.ed25519 import (
+    Ed25519PrivateKey, Ed25519PublicKey,
+)
+from cryptography.hazmat.primitives.serialization import (
+    Encoding, PublicFormat,
+)
+
+# Demo: server başlarken bir kez ephemeral Ed25519 identity key üret
+_SERVER_IDENTITY = Ed25519PrivateKey.generate()
+_SERVER_PUB_BYTES = _SERVER_IDENTITY.public_key().public_bytes(
+    Encoding.Raw, PublicFormat.Raw
+)
+
 # Sayaçlar
 stats = defaultdict(lambda: {
     "received": 0,
@@ -102,8 +115,16 @@ async def secure_handler(reader, writer):
         from qdap.security.handshake import perform_server_handshake
         from qdap.security.encrypted_frame import FrameEncryptor
 
-        # Handshake
-        session_keys = await perform_server_handshake(reader, writer)
+        # Key exchange: server pub key gönder → client pub key al
+        writer.write(_SERVER_PUB_BYTES)
+        await writer.drain()
+        client_pub_raw = await asyncio.wait_for(reader.readexactly(32), timeout=10.0)
+        client_pub = Ed25519PublicKey.from_public_bytes(client_pub_raw)
+
+        # eCK-model mutual handshake
+        session_keys = await perform_server_handshake(
+            reader, writer, _SERVER_IDENTITY, client_pub
+        )
         decryptor    = FrameEncryptor(session_keys.data_key)
 
         while True:

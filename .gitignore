@@ -68,3 +68,7 @@ crash.*.log
 
 # Gemini
 .gemini/
+
+# Generated docs & results
+*.md
+*.json

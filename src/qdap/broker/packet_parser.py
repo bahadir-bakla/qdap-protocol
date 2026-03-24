@@ -78,15 +78,18 @@ def parse_packet(data: bytes) -> Optional[MQTTPacket]:
     body = data[offset:offset + remaining_length]
 
     if ptype == MQTT_CONNECT:
-        # Protocol name
         proto_len = struct.unpack_from("!H", body, 0)[0]
-        pos = 2 + proto_len + 1  # skip proto name + version
+        pos = 2 + proto_len          # proto name'i atla
+        version = body[pos]          # 4 = MQTT 3.1.1,  5 = MQTT 5.0
+        pos += 1
         connect_flags = body[pos]
         pos += 1
         pkt.keepalive = struct.unpack_from("!H", body, pos)[0]
         pos += 2
-        # MQTT 5.0: properties length
-        prop_len = body[pos]; pos += 1 + prop_len
+        # Sadece MQTT 5.0'da properties var
+        if version == 5:
+            prop_len = body[pos]
+            pos += 1 + prop_len
         pkt.client_id, pos = decode_string(body, pos)
         pkt.clean_session = bool(connect_flags & 0x02)
 
@@ -106,22 +109,25 @@ def parse_packet(data: bytes) -> Optional[MQTTPacket]:
 
     elif ptype == MQTT_SUBSCRIBE:
         pkt.packet_id = struct.unpack_from("!H", body, 0)[0]
-        pos = 3  # skip packet_id + properties length
+        pos = 2
+        prop_len, pos = decode_remaining_length(body, pos)
+        pos += prop_len
         subs = []
         while pos < len(body):
-            topic, pos = decode_string(body, pos)
-            qos = body[pos] & 0x03
-            pos += 1
-            subs.append((topic, qos))
+          topic, pos = decode_string(body, pos)
+          qos = body[pos] & 0x03
+          pos += 1
+          subs.append((topic, qos))
         pkt.subscriptions = subs
-
     elif ptype == MQTT_UNSUBSCRIBE:
         pkt.packet_id = struct.unpack_from("!H", body, 0)[0]
-        pos = 3
+        pos = 2
+        prop_len, pos = decode_remaining_length(body, pos)
+        pos += prop_len
         topics = []
         while pos < len(body):
-            topic, pos = decode_string(body, pos)
-            topics.append((topic, 0))
+          topic, pos = decode_string(body, pos)
+          topics.append((topic, 0))
         pkt.subscriptions = topics
 
     return pkt

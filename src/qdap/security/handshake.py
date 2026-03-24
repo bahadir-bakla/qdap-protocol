@@ -229,6 +229,120 @@ async def perform_client_handshake(
     return session_keys
 
 
+from qdap.security.session_ticket import SessionTicketStore, SessionTicket
+
+# Global ticket store (server instance başına bir tane)
+_ticket_store = SessionTicketStore()
+
+# Client tarafında ticket saklama (device_id → wire_ticket)
+_client_tickets: dict = {}
+
+
+async def perform_server_handshake_with_ticket(
+    reader,
+    writer,
+    server_identity: "Ed25519PrivateKey",
+    client_public_key: "Ed25519PublicKey",
+    device_id: str = None,
+) -> "SessionKeys":
+    """
+    Server handshake — sonunda session ticket gönderir.
+    Returns: SessionKeys
+    """
+    import asyncio
+    session_keys = await perform_server_handshake(
+        reader, writer, server_identity, client_public_key
+    )
+
+    # Session ticket oluştur ve gönder
+    if device_id:
+        from qdap.frame.qframe import build_control_frame, FRAME_SESSION_TICKET
+        wire_ticket = _ticket_store.create_ticket(device_id, session_keys.data_key)
+        ticket_frame = build_control_frame(
+            frame_type=FRAME_SESSION_TICKET,
+            payload=wire_ticket,
+        )
+        writer.write(ticket_frame)
+        await writer.drain()
+
+    return session_keys
+
+
+async def perform_client_handshake_with_resume(
+    reader,
+    writer,
+    client_identity: "Ed25519PrivateKey",
+    server_public_key: "Ed25519PublicKey",
+    device_id: str = None,
+) -> "tuple[SessionKeys, bool]":
+    """
+    Client handshake — önce resume dene, olmazsa full handshake.
+    Returns: (SessionKeys, resumed: bool)
+    """
+    import asyncio
+    from qdap.frame.qframe import build_control_frame, FRAME_SESSION_RESUME
+
+    # Önceki ticket var mı?
+    wire_ticket = _client_tickets.get(device_id) if device_id else None
+
+    if wire_ticket:
+        # 0-RTT resume dene
+        try:
+            session_keys = await _try_resume(reader, writer, wire_ticket)
+            if session_keys:
+                return session_keys, True
+        except Exception:
+            pass
+        # Resume başarısız → temizle, full handshake yap
+        _client_tickets.pop(device_id, None)
+
+    # Full handshake
+    session_keys = await perform_client_handshake(
+        reader, writer, client_identity, server_public_key
+    )
+
+    # Sunucudan ticket bekle
+    if device_id:
+        try:
+            from qdap.frame.qframe import parse_control_frame, FRAME_SESSION_TICKET
+            ticket_frame = await asyncio.wait_for(
+                reader.read(256), timeout=2.0
+            )
+            frame_type, ticket_payload = parse_control_frame(ticket_frame)
+            if frame_type == FRAME_SESSION_TICKET:
+                _client_tickets[device_id] = ticket_payload
+        except Exception:
+            pass
+
+    return session_keys, False
+
+
+async def _try_resume(reader, writer, wire_ticket: bytes) -> "Optional[SessionKeys]":
+    """0-RTT resume denemesi."""
+    import asyncio
+    from qdap.frame.qframe import build_control_frame, FRAME_SESSION_RESUME
+
+    resume_frame = build_control_frame(
+        frame_type=FRAME_SESSION_RESUME,
+        payload=wire_ticket,
+    )
+    writer.write(resume_frame)
+    await writer.drain()
+
+    # RESUME_ACK bekle
+    ack = await asyncio.wait_for(reader.read(64), timeout=2.0)
+    if ack and ack[0] == FRAME_SESSION_RESUME:
+        # Session key'i ticket'tan restore et
+        ticket = _ticket_store.redeem_ticket(wire_ticket)
+        if ticket:
+            return SessionKeys(
+                data_key=ticket.session_key,
+                hmac_key=ticket.session_key,   # simplified
+                session_id=ticket.ticket_id,
+            )
+    return None
+
+
 async def perform_server_handshake(
     reader:             "asyncio.StreamReader",
     writer:             "asyncio.StreamWriter",

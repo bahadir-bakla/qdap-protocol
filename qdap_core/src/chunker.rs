@@ -68,6 +68,32 @@ pub fn calculate_optimal_chunk_size(
 }
 
 
+/// Paralel stream için chunk dağıtımını hesapla.
+///
+/// Returns: Vec<(stream_num, chunk_idx, start, end)>
+/// Her tuple: hangi stream'e ait, kaçıncı chunk, payload'da başlangıç ve bitiş offset'i.
+#[pyfunction]
+pub fn plan_parallel_chunks(
+    payload_size: usize,
+    chunk_size:   usize,
+    n_streams:    usize,
+) -> Vec<(usize, usize, usize, usize)> {
+    if chunk_size == 0 || n_streams == 0 {
+        return Vec::new();
+    }
+    let n_chunks = (payload_size + chunk_size - 1) / chunk_size;
+    let mut plan = Vec::with_capacity(n_chunks);
+
+    for idx in 0..n_chunks {
+        let start      = idx * chunk_size;
+        let end        = (start + chunk_size).min(payload_size);
+        let stream_num = idx % n_streams;
+        plan.push((stream_num, idx, start, end));
+    }
+    plan
+}
+
+
 fn next_power_of_two_floor(n: usize) -> usize {
     if n == 0 { return 4096; }
     let mut power = 1usize;

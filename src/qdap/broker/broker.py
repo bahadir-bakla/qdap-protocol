@@ -13,6 +13,7 @@ from .packet_parser import (
 from .topic_tree import TopicTree
 from .session_store import SessionStore
 from .qdap_transport import topic_to_priority
+from qdap.scheduler.qft_scheduler import QFTScheduler
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [QDAP-BROKER] %(message)s")
@@ -25,6 +26,7 @@ class QDAPBroker:
         self.topic_tree = TopicTree()
         self.sessions = SessionStore()
         self._stats = {"published": 0, "delivered": 0, "connected": 0}
+        self._schedulers: Dict[str, QFTScheduler] = {}
 
     async def handle_client(self, reader: asyncio.StreamReader,
                              writer: asyncio.StreamWriter):
@@ -69,6 +71,9 @@ class QDAPBroker:
             if client_id:
                 self.sessions.remove(client_id)
                 self.topic_tree.remove_client(client_id)
+                scheduler = self._schedulers.pop(client_id, None)
+                if scheduler:
+                    scheduler.detach_device()
             writer.close()
             logger.info(f"Client {client_id} disconnected")
 
@@ -81,6 +86,17 @@ class QDAPBroker:
             await writer.drain()
             self._stats["connected"] += 1
             logger.info(f"CONNECT: {client_id}")
+
+            # Session cache'den önceki QFT state yükle
+            scheduler = QFTScheduler()
+            resumed = scheduler.attach_device(client_id)
+            if resumed:
+                logger.info(
+                    f"Session resumed for {client_id} "
+                    f"(n_decisions={scheduler.n_decisions}, "
+                    f"warmup_progress={scheduler.warmup_progress:.1%})"
+                )
+            self._schedulers[client_id] = scheduler
 
         elif pkt.ptype == MQTT_PUBLISH:
             self._stats["published"] += 1

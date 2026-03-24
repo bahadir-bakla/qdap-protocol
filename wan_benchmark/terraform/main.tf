@@ -44,7 +44,6 @@ resource "aws_security_group" "qdap_sg_ireland" {
   name        = "qdap-wan-sg"
   description = "QDAP WAN benchmark"
 
-  # SSH
   ingress {
     from_port   = 22
     to_port     = 22
@@ -52,7 +51,6 @@ resource "aws_security_group" "qdap_sg_ireland" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # QDAP ports
   ingress {
     from_port   = 19600
     to_port     = 19603
@@ -96,47 +94,35 @@ resource "aws_security_group" "qdap_sg_singapore" {
 }
 
 
-# ─── EC2 Instances (t3.medium spot) ────────────────────────────────────────
+# ─── EC2 Instances (on-demand t3.micro — free tier compatible) ─────────────
 
-resource "aws_spot_instance_request" "sender" {
-  provider             = aws.ireland
-  ami                  = "ami-0f9ae27ecf629cbe3"
-  instance_type        = "t3.micro"
-  spot_price           = "0.05"        # max $0.05/saat (genelde $0.01-0.02)
-  wait_for_fulfillment = true
-  key_name             = aws_key_pair.qdap_ireland.key_name
-  security_groups      = [aws_security_group.qdap_sg_ireland.name]
+resource "aws_instance" "sender" {
+  provider               = aws.ireland
+  ami                    = "ami-0f9ae27ecf629cbe3"   # Ubuntu 22.04 eu-west-1
+  instance_type          = "t3.micro"
+  key_name               = aws_key_pair.qdap_ireland.key_name
+  vpc_security_group_ids = [aws_security_group.qdap_sg_ireland.id]
 
   user_data = <<-EOF
     #!/bin/bash
     apt-get update -y
-    apt-get install -y python3 python3-pip git
-    pip3 install cryptography aiohttp
-    cd /home/ubuntu
-    git clone $${var.repo_url} quantum-protocol
-    chown -R ubuntu:ubuntu quantum-protocol
+    apt-get install -y python3 python3-pip python3-venv
   EOF
 
   tags = { Name = "qdap-wan-sender" }
 }
 
-resource "aws_spot_instance_request" "receiver" {
-  provider             = aws.singapore
-  ami                  = "ami-0434196a03595d088"
-  instance_type        = "t3.micro"
-  spot_price           = "0.05"
-  wait_for_fulfillment = true
-  key_name             = aws_key_pair.qdap_singapore.key_name
-  security_groups      = [aws_security_group.qdap_sg_singapore.name]
+resource "aws_instance" "receiver" {
+  provider               = aws.singapore
+  ami                    = "ami-0434196a03595d088"   # Ubuntu 22.04 ap-southeast-1
+  instance_type          = "t3.micro"
+  key_name               = aws_key_pair.qdap_singapore.key_name
+  vpc_security_group_ids = [aws_security_group.qdap_sg_singapore.id]
 
   user_data = <<-EOF
     #!/bin/bash
     apt-get update -y
-    apt-get install -y python3 python3-pip git
-    pip3 install cryptography aiohttp
-    cd /home/ubuntu
-    git clone $${var.repo_url} quantum-protocol
-    chown -R ubuntu:ubuntu quantum-protocol
+    apt-get install -y python3 python3-pip python3-venv
   EOF
 
   tags = { Name = "qdap-wan-receiver" }
@@ -146,9 +132,9 @@ resource "aws_spot_instance_request" "receiver" {
 # ─── Outputs ────────────────────────────────────────────────────────────────
 
 output "sender_ip" {
-  value = aws_spot_instance_request.sender.public_ip
+  value = aws_instance.sender.public_ip
 }
 
 output "receiver_ip" {
-  value = aws_spot_instance_request.receiver.public_ip
+  value = aws_instance.receiver.public_ip
 }

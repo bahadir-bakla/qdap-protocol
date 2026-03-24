@@ -105,8 +105,8 @@ async def start_server(
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ws-port",     type=int, default=8765)
-    parser.add_argument("--qdap-host",   required=True)
+    parser.add_argument("--ws-port", "--port", type=int, default=8765)
+    parser.add_argument("--qdap-host",   default="localhost")
     parser.add_argument("--qdap-port",   type=int, default=19601)
     parser.add_argument("--no-security", action="store_true")
     parser.add_argument("--verbose",     action="store_true")
