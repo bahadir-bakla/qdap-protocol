@@ -6,7 +6,6 @@ build-backend = "hatchling.build"
 name = "qdap"
 version = "0.1.0"
 description = "Quantum-Inspired Dynamic Application Protocol"
-readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "QDAP Team" }]
 keywords = [

@@ -47,6 +47,7 @@ step() { echo -e "\n${BOLD}${CYAN}━━━ $* ${RESET}"; }
 
 # ── Paths ────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+VENV="/home/ubuntu/qdap-venv"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 TF_DIR="$PROJECT_DIR/wan_benchmark/terraform"
 RESULT_DIR="$PROJECT_DIR/wan_benchmark/results"
@@ -85,7 +86,7 @@ wait_ssh() {
   local CMD="$1"
   local USER_HOST="$2"
   local LABEL="$3"
-  local MAX=40
+  local MAX=60
   info "Waiting for SSH: $LABEL..."
   for i in $(seq 1 $MAX); do
     if $CMD "$USER_HOST" "echo OK" 2>/dev/null | grep -q OK; then
@@ -148,8 +149,8 @@ ok "Receiver (Singapore):  $RECEIVER_IP"
 
 # ── Step 2: SSH ready ────────────────────────────────────────────
 step "Step 2/6: Waiting for instances to boot"
-wait_ssh "$SSH_EU ubuntu@" "$SENDER_IP"   "Ireland sender"
-wait_ssh "$SSH_SG ubuntu@" "$RECEIVER_IP" "Singapore receiver"
+wait_ssh "$SSH_EU" "ubuntu@$SENDER_IP"   "Ireland sender"
+wait_ssh "$SSH_SG" "ubuntu@$RECEIVER_IP" "Singapore receiver"
 
 # ── Measure RTT ─────────────────────────────────────────────────
 info "Measuring Ireland → Singapore RTT..."
@@ -180,22 +181,21 @@ ok "Code synced to both instances"
 step "Step 4/6: Installing Python dependencies"
 
 PIP_PKGS="cryptography numpy"
+VENV="/home/ubuntu/qdap-venv"
 
 info "Installing deps on Ireland (sender)..."
 $SSH_EU ubuntu@"$SENDER_IP" \
-  "sudo apt-get install -y python3-pip python3-venv 2>/dev/null; \
-   cd /home/ubuntu/quantum-protocol && \
-   python3 -m venv .venv && \
-   source .venv/bin/activate && \
-   pip install -q $PIP_PKGS && echo DONE" 2>/dev/null | grep -E "(DONE|error|Error)" || true
+  "sudo cloud-init status --wait 2>/dev/null || sleep 20; \
+   sudo apt-get install -y python3-venv python3-pip -qq 2>/dev/null; \
+   python3 -m venv $VENV && \
+   $VENV/bin/pip install -q $PIP_PKGS && echo DONE" 2>/dev/null | grep -E "(DONE|error|Error)" || true
 
 info "Installing deps on Singapore (receiver)..."
 $SSH_SG ubuntu@"$RECEIVER_IP" \
-  "sudo apt-get install -y python3-pip python3-venv 2>/dev/null; \
-   cd /home/ubuntu/quantum-protocol && \
-   python3 -m venv .venv && \
-   source .venv/bin/activate && \
-   pip install -q $PIP_PKGS && echo DONE" 2>/dev/null | grep -E "(DONE|error|Error)" || true
+  "sudo cloud-init status --wait 2>/dev/null || sleep 20; \
+   sudo apt-get install -y python3-venv python3-pip -qq 2>/dev/null; \
+   python3 -m venv $VENV && \
+   $VENV/bin/pip install -q $PIP_PKGS && echo DONE" 2>/dev/null | grep -E "(DONE|error|Error)" || true
 
 ok "Dependencies installed"
 
@@ -207,11 +207,11 @@ info "Starting receiver on Singapore (port 19600–19603)..."
 $SSH_SG ubuntu@"$RECEIVER_IP" \
   "pkill -f wan_receiver.py 2>/dev/null; sleep 1; \
    cd /home/ubuntu/quantum-protocol && \
-   source .venv/bin/activate && \
-   nohup env PYTHONPATH=src python wan_benchmark/wan_receiver.py \
+   nohup env PYTHONPATH=src $VENV/bin/python3 wan_benchmark/wan_receiver.py \
      </dev/null >/tmp/receiver.log 2>&1 &
-   sleep 3
-   echo started" 2>/dev/null | grep started || warn "Receiver start may have issues"
+   sleep 5
+   cat /tmp/receiver.log | head -5
+   echo started" 2>/dev/null | grep -E "(started|Error|Traceback)" || warn "Receiver start may have issues"
 
 # Poll receiver readiness
 info "Waiting for receiver to bind ports..."
@@ -239,8 +239,7 @@ info "Running sender benchmark (Ireland → Singapore, RTT~${RTT}ms)..."
 echo ""
 $SSH_EU ubuntu@"$SENDER_IP" \
   "cd /home/ubuntu/quantum-protocol && \
-   source .venv/bin/activate && \
-   PYTHONPATH=src PYTHONUNBUFFERED=1 python -u wan_benchmark/wan_sender.py \
+   PYTHONPATH=src PYTHONUNBUFFERED=1 $VENV/bin/python3 -u wan_benchmark/wan_sender.py \
      --host $RECEIVER_IP --rtt ${RTT} --protocols ${PROTOCOLS}" 2>&1 || warn "Sender exited with error (results may still be saved)"
 
 # ── Step 6: Download results ──────────────────────────────────────
