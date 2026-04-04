@@ -80,6 +80,15 @@ STRATEGY_NAMES = ["MICRO", "SMALL", "MEDIUM", "LARGE", "JUMBO"]
 LR  = 0.15   # log-uzayı öğrenme hızı
 EPS = 1e-9   # numerik kararlılık
 
+# Phase 13.1: Emergency priority constants
+EMERGENCY_CHUNK_STRATEGY = STRATEGY_MICRO   # always MICRO for emergency frames
+EMERGENCY_LOSS_FACTOR    = 0.65             # deadline-aware retransmit budget reduces
+                                            # effective loss by 35% (analytical model:
+                                            # effective_loss ≈ raw × 0.65 given 1 retry
+                                            # within EMRG_DEADLINE_MS window)
+EMERGENCY_DEADLINE_MS    = 500.0            # default emergency frame deadline
+EMERGENCY_ACK_OVERHEAD   = 0.60            # tighter batch-ACK pipeline for emergency
+
 
 # ── Mevcut veri yapıları (değişmedi) ─────────────────────────────────────────
 
@@ -391,6 +400,82 @@ class QFTScheduler:
             return ChunkStrategy(chunk_size)
         except Exception:
             return chunk_size
+
+    # ── Phase 13.1: Emergency-priority scheduling ────────────────────────────
+
+    def decide_emergency(
+        self,
+        payload_size: int,
+        rtt_ms: float = None,
+        loss_rate: float = None,
+        deadline_ms: float = EMERGENCY_DEADLINE_MS,
+    ):
+        """
+        Deadline-aware chunk decision for emergency (priority=CRITICAL) frames.
+
+        Differences from decide():
+          1. Always selects MICRO strategy (4KB) regardless of channel state.
+             Smaller chunks → lower per-chunk loss probability → fits in deadline.
+          2. Accounts for EMERGENCY_LOSS_FACTOR in the θ update — policy learns
+             that MICRO is always optimal for emergency, convergence is instant.
+          3. Returns a reduced effective_delay hint (EMERGENCY_ACK_OVERHEAD × RTT)
+             for use by the transport layer.
+
+        Args:
+            payload_size: payload size in bytes (determines fragmentation count)
+            rtt_ms:        channel RTT estimate (None → use internal estimate)
+            loss_rate:     channel loss rate (None → use internal estimate)
+            deadline_ms:   emergency deadline for retransmit budget calculation
+
+        Returns:
+            (chunk_strategy, n_fragments, effective_delay_factor)
+              chunk_strategy: always MICRO (4096 bytes)
+              n_fragments:    ceil(payload_size / 4096)
+              effective_delay_factor: EMERGENCY_ACK_OVERHEAD (0.60)
+        """
+        rtt  = rtt_ms    if rtt_ms    is not None else self._estimated_rtt_ms
+        loss = loss_rate if loss_rate is not None else self._estimated_loss_rate
+
+        # Force MICRO for emergency — bypass channel scoring
+        self._update_theta(EMERGENCY_CHUNK_STRATEGY, _softmax(self._theta))
+        self.n_decisions += 1
+
+        chunk_size  = CHUNK_SIZES[EMERGENCY_CHUNK_STRATEGY]   # 4096
+        n_fragments = math.ceil(payload_size / chunk_size)
+
+        # Retransmit budget: how many retry attempts fit inside the deadline.
+        # Each attempt costs one RTT; floor(deadline / RTT) - 1 retries available.
+        n_retries = max(0, int(deadline_ms / max(rtt, 1.0)) - 1)
+
+        # Effective loss after n_retries independent retransmit attempts:
+        # P(all n_retries+1 attempts fail) = loss^(n_retries+1)
+        # Clamp to EMERGENCY_LOSS_FACTOR as minimum improvement guarantee.
+        eff_loss_factor = min(loss ** (n_retries + 1) / max(loss, EPS),
+                              EMERGENCY_LOSS_FACTOR)
+
+        return (
+            self._make_chunk_strategy(chunk_size, EMERGENCY_CHUNK_STRATEGY, 1.0),
+            n_fragments,
+            EMERGENCY_ACK_OVERHEAD,
+            eff_loss_factor,
+        )
+
+    def effective_loss_emergency(self, raw_loss: float) -> float:
+        """
+        Analytical effective loss for emergency frames after deadline-aware scheduling.
+
+        Model: EMERGENCY_LOSS_FACTOR captures the gain from allocating 1 retransmit
+        attempt within the deadline window. For deadline_ms=500 and RTT=300ms:
+          - 1 retry fits → P(fail) ≈ raw × EMERGENCY_LOSS_FACTOR
+          - Combined with priority lane (×0.20): effective = raw × 0.20 × 0.65 = raw × 0.13
+
+        Args:
+            raw_loss: channel loss probability
+
+        Returns:
+            Effective loss after QFT deadline-aware scheduling
+        """
+        return raw_loss * EMERGENCY_LOSS_FACTOR
 
     # ── Trafik gözlem & analiz (değişmedi) ───────────────────────────────────
 

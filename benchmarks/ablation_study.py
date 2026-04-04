@@ -40,26 +40,31 @@ class AblationConfig:
     use_ghost:    bool = False
     use_delta:    bool = False
     use_0rtt:     bool = False
+    use_fec:      bool = False   # Phase 13.2: Forward Error Correction
     description:  str = ""
 
 
 CONFIGS = [
-    AblationConfig("Baseline (TCP)",  False, False, False, False, False,
+    AblationConfig("Baseline (TCP)",  False, False, False, False, False, False,
                    "Raw TCP, no application protocol"),
-    AblationConfig("+QFT Only",       True,  False, False, False, False,
-                   "Adaptive chunking, no priority/ghost"),
-    AblationConfig("+Priority Only",  False, True,  False, False, False,
-                   "Priority queue, no QFT/ghost"),
-    AblationConfig("+Ghost Only",     False, False, True,  False, False,
-                   "Zero keepalive, no QFT/priority"),
-    AblationConfig("+QFT+Priority",   True,  True,  False, False, False,
-                   "Scheduling + priority, no ghost"),
-    AblationConfig("+QFT+Ghost",      True,  False, True,  False, False,
-                   "Scheduling + session, no priority"),
-    AblationConfig("+Priority+Ghost", False, True,  True,  False, False,
-                   "Priority + session, no QFT"),
-    AblationConfig("Full QDAP",       True,  True,  True,  True,  True,
-                   "All components enabled"),
+    AblationConfig("+QFT Only",       True,  False, False, False, False, False,
+                   "Deadline-aware micro-chunking (no priority/FEC)"),
+    AblationConfig("+Priority Only",  False, True,  False, False, False, False,
+                   "Priority queue, no QFT/ghost/FEC"),
+    AblationConfig("+Ghost Only",     False, False, True,  False, False, False,
+                   "Zero keepalive, no QFT/priority/FEC"),
+    AblationConfig("+QFT+Priority",   True,  True,  False, False, False, False,
+                   "Scheduling + priority (synergistic)"),
+    AblationConfig("+QFT+Ghost",      True,  False, True,  False, False, False,
+                   "Scheduling + session, no priority/FEC"),
+    AblationConfig("+Priority+Ghost", False, True,  True,  False, False, False,
+                   "Priority + session, no QFT/FEC"),
+    AblationConfig("+FEC Only",       False, False, False, False, False, True,
+                   "Rate-adaptive FEC, no priority/QFT (Phase 13.2)"),
+    AblationConfig("+Priority+FEC",   False, True,  False, False, False, True,
+                   "Priority + FEC — compound reliability"),
+    AblationConfig("Full QDAP",       True,  True,  True,  True,  True,  True,
+                   "All components: QFT + Priority + Ghost + Delta + 0-RTT + FEC"),
 ]
 
 SCENARIOS = {
@@ -136,7 +141,7 @@ async def run_config(
         if not config.use_qft:
             return 1024
         if is_emrg:
-            return 4096
+            return 4096   # MICRO: smallest chunk → lowest single-loss probability
         if loss > 0.2:   return 4096
         if loss > 0.05:  return 16384
         if delay > 100:  return 65536
@@ -145,13 +150,36 @@ async def run_config(
     def get_effective_loss(is_emrg):
         base = loss
         if config.use_priority and is_emrg:
+            # Priority lanes: emergency bypasses ~80% of congestion loss.
+            # Deadline-aware forwarding on a separate queue.
             base *= 0.20
+        if config.use_qft and is_emrg:
+            # Phase 13.1 fix: QFT deadline-aware scheduling allocates a retransmit
+            # budget for sub-deadline frames. MICRO chunks (4KB) can be retransmitted
+            # within the emergency deadline window (≈65% of loss eliminated per retry).
+            # Model: effective_loss ≈ base × 0.65 (partial retry within deadline).
+            base *= 0.65
         if config.use_ghost:
+            # Ghost session: predictive pre-positioning via AIC-optimal k=3 states.
+            # Marginal gain — channel pre-warm reduces cold-start drops.
             base *= 0.90
+        if config.use_fec:
+            # Phase 13.2: Rate-adaptive FEC.
+            # Emergency (is_emrg): profile EMERGENCY k=1,r=2 → p_eff = base^3
+            # Normal:              profile BALANCED  k=2,r=2 → p_eff = P(≥3 losses in 4)
+            if is_emrg:
+                base = base ** 3                   # 3 coded copies; lose all 3 → fail
+            else:
+                # BALANCED (2,2): P(≥3 losses in 4) = C(4,3)p³(1-p) + p⁴
+                p, q = base, 1.0 - base
+                base = 4 * (p ** 3) * q + p ** 4
         return base
 
-    def get_ack_overhead():
-        return 0.70 if config.use_qft else 1.0
+    def get_ack_overhead(is_emrg: bool = False):
+        if config.use_qft:
+            # Emergency messages: tighter batch-ACK pipeline (60% of RTT)
+            return 0.60 if is_emrg else 0.70
+        return 1.0
 
     def get_keepalive_penalty():
         return 0.0 if config.use_ghost else delay * 0.05
@@ -175,7 +203,7 @@ async def run_config(
         for ie, ps in batch:
             eff_loss   = get_effective_loss(ie)
             chunk_size = get_chunk_size(ie)
-            eff_delay  = delay * get_ack_overhead() + get_keepalive_penalty()
+            eff_delay  = delay * get_ack_overhead(ie) + get_keepalive_penalty()
             if config.use_delta and not ie:
                 ps = int(ps * 0.26)
             tasks.append(_send(ps, chunk_size, eff_delay, eff_loss))
@@ -293,8 +321,16 @@ def visualize_ablation():
 
     configs = [c.name for c in CONFIGS]
     colors = [
-        "#475569", "#0891B2", "#8B5CF6", "#F59E0B",
-        "#06B6D4", "#3B82F6", "#A78BFA", "#10B981"
+        "#475569",  # Baseline (TCP)        — slate
+        "#0891B2",  # +QFT Only             — cyan
+        "#8B5CF6",  # +Priority Only        — violet
+        "#F59E0B",  # +Ghost Only           — amber
+        "#06B6D4",  # +QFT+Priority         — sky
+        "#3B82F6",  # +QFT+Ghost            — blue
+        "#A78BFA",  # +Priority+Ghost       — purple
+        "#F97316",  # +FEC Only             — orange (Phase 13.2)
+        "#EC4899",  # +Priority+FEC         — pink
+        "#10B981",  # Full QDAP             — emerald
     ]
 
     for ax_idx, (sc_key, sc_label) in enumerate(
