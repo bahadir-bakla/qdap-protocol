@@ -120,7 +120,7 @@ async def single_run_qdap(scenario: dict, seed: int) -> dict:
         if ie: emrg_sent += 1
 
         eff_loss = scenario["loss"] * (0.20 if ie else 0.45)
-        await asyncio.sleep(scenario["delay_ms"] * 0.70 / 1000.0)
+        # No real sleep — latency is computed analytically below
         if random.random() > eff_loss:
             delivered += 1
             lat = scenario["delay_ms"] * 0.70 * (1 + random.gauss(0, 0.08))
@@ -150,7 +150,7 @@ async def single_run_baseline(scenario: dict, seed: int) -> dict:
         ps = random.choice([1024, 65536])
         if ie: emrg_sent += 1
 
-        await asyncio.sleep(scenario["delay_ms"] / 1000.0)
+        # No real sleep — latency is computed analytically below
         if random.random() > scenario["loss"]:
             delivered += 1
             lat = scenario["delay_ms"] * (1 + random.gauss(0, 0.10))
@@ -184,7 +184,7 @@ async def single_run_mqtt(scenario: dict, seed: int) -> dict:
         if scenario["loss"] > 0.2 and ie:
             eff_loss = scenario["loss"] * 1.8
 
-        await asyncio.sleep(scenario["delay_ms"] * 2 / 1000.0)
+        # No real sleep — latency is computed analytically below
         if random.random() > eff_loss:
             delivered += 1
             lat = scenario["delay_ms"] * 2 * (1 + random.gauss(0, 0.15))

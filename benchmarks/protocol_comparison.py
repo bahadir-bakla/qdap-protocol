@@ -311,29 +311,35 @@ async def bench_mqtt311(
     m = ProtocolMetrics("MQTT 3.1.1", scenario["label"])
     t0 = time.perf_counter()
 
-    for i in range(n_messages):
-        is_emrg = random.random() < emergency_ratio
-        payload_size = 1024 if is_emrg else random.choice([1024, 65536])
-        m.sent += 1
-        if is_emrg: m.emrg_sent += 1
+    # MQTT 3.1.1 RECEIVE_MAXIMUM window=20 (realistic inflight limit)
+    WINDOW = 20
+    for batch_start in range(0, n_messages, WINDOW):
+        tasks = []
+        batch_meta = []
+        for i in range(min(WINDOW, n_messages - batch_start)):
+            is_emrg = random.random() < emergency_ratio
+            payload_size = 1024 if is_emrg else random.choice([1024, 65536])
+            m.sent += 1
+            if is_emrg: m.emrg_sent += 1
+            batch_meta.append((is_emrg, payload_size))
+            tasks.append(simulated_send(
+                payload_size + 20,  # MQTT fixed header
+                scenario["delay_ms"] * 2,  # 2 roundtrip per QoS-1 message
+                scenario["loss"],
+            ))
 
-        ok, lat = await simulated_send(
-            payload_size + 20,  # MQTT fixed header
-            scenario["delay_ms"] * 2,  # 2 roundtrip
-            scenario["loss"],
-        )
-
-        if scenario["loss"] > 0.2:
-            if is_emrg and random.random() < scenario["loss"] * 2:
-                ok = False
-
-        if ok:
-            m.delivered += 1
-            m.latencies.append(lat)
-            m.bytes_transferred += payload_size
-            if is_emrg:
-                m.emrg_delivered += 1
-                m.emrg_latencies.append(lat)
+        results = await asyncio.gather(*tasks)
+        for (is_emrg, payload_size), (ok, lat) in zip(batch_meta, results):
+            if scenario["loss"] > 0.2:
+                if is_emrg and random.random() < scenario["loss"] * 2:
+                    ok = False
+            if ok:
+                m.delivered += 1
+                m.latencies.append(lat)
+                m.bytes_transferred += payload_size
+                if is_emrg:
+                    m.emrg_delivered += 1
+                    m.emrg_latencies.append(lat)
 
     m.duration_s = time.perf_counter() - t0
     return m
@@ -354,31 +360,36 @@ async def bench_mqtt50(
     m = ProtocolMetrics("MQTT 5.0", scenario["label"])
     t0 = time.perf_counter()
 
-    for i in range(n_messages):
-        is_emrg = random.random() < emergency_ratio
-        payload_size = 1024 if is_emrg else random.choice([1024, 65536])
-        m.sent += 1
-        if is_emrg: m.emrg_sent += 1
+    # MQTT 5.0 Receive Maximum window=20 (RFC-compliant concurrent inflight)
+    WINDOW = 20
+    for batch_start in range(0, n_messages, WINDOW):
+        tasks = []
+        batch_meta = []
+        for i in range(min(WINDOW, n_messages - batch_start)):
+            is_emrg = random.random() < emergency_ratio
+            payload_size = 1024 if is_emrg else random.choice([1024, 65536])
+            m.sent += 1
+            if is_emrg: m.emrg_sent += 1
+            header_size = 15  # topic alias
+            batch_meta.append((is_emrg, payload_size))
+            tasks.append(simulated_send(
+                payload_size + header_size,
+                scenario["delay_ms"] * 1.8,
+                scenario["loss"],
+            ))
 
-        header_size = 15  # topic alias
-
-        ok, lat = await simulated_send(
-            payload_size + header_size,
-            scenario["delay_ms"] * 1.8,
-            scenario["loss"],
-        )
-
-        if scenario["loss"] > 0.2:
-            if is_emrg and random.random() < scenario["loss"] * 1.5:
-                ok = False
-
-        if ok:
-            m.delivered += 1
-            m.latencies.append(lat)
-            m.bytes_transferred += payload_size
-            if is_emrg:
-                m.emrg_delivered += 1
-                m.emrg_latencies.append(lat)
+        results = await asyncio.gather(*tasks)
+        for (is_emrg, payload_size), (ok, lat) in zip(batch_meta, results):
+            if scenario["loss"] > 0.2:
+                if is_emrg and random.random() < scenario["loss"] * 1.5:
+                    ok = False
+            if ok:
+                m.delivered += 1
+                m.latencies.append(lat)
+                m.bytes_transferred += payload_size
+                if is_emrg:
+                    m.emrg_delivered += 1
+                    m.emrg_latencies.append(lat)
 
     m.duration_s = time.perf_counter() - t0
     return m
