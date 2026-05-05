@@ -48,6 +48,9 @@ dev    = [
 # pip install qdap[all]    — her sey
 all    = ["qdap[viz,qiskit,quic,dev]"]
 
+[project.scripts]
+qdap = "qdap.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/qdap-protocol/qdap"
 Issues = "https://github.com/qdap-protocol/qdap/issues"
