@@ -1,0 +1,101 @@
+name: Publish to PyPI
+
+# Trigger: git tag v* push → otomatik PyPI yayini
+# Ornek: git tag v0.2.0 && git push origin v0.2.0
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write  # Trusted Publisher (OIDC) icin
+
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install build tools
+        run: pip install --upgrade build hatchling
+
+      - name: Build wheel + sdist
+        run: python -m build
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  test-install:
+    name: Verify clean install
+    needs: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install from wheel
+        run: pip install dist/*.whl
+
+      - name: Smoke test
+        run: |
+          python -c "
+          import qdap
+          print('qdap version:', qdap.__version__)
+          # Core API check
+          assert hasattr(qdap, 'QDAPServer')
+          assert hasattr(qdap, 'QDAPClient')
+          assert hasattr(qdap, 'AdaptiveFEC')
+          assert hasattr(qdap, 'QFrame')
+          assert hasattr(qdap, 'DeltaEncoder')
+          assert hasattr(qdap, 'BPTTMarkovEstimator')
+          # FEC sanity
+          fec = qdap.AdaptiveFEC()
+          fec.observe_loss(3, 10)
+          coded, profile = fec.encode(b'test', is_emergency=True)
+          assert len(coded) >= 1
+          print('All API checks passed')
+          "
+
+  publish:
+    name: Publish to PyPI
+    needs: [build, test-install]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/qdap
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI (Trusted Publisher / OIDC)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # OIDC trusted publisher — PyPI'da "qdap-protocol/qdap" repo ayarlanmali
+        # PYPI_API_TOKEN secret alternatifi:
+        # with:
+        #   password: ${{ secrets.PYPI_API_TOKEN }}

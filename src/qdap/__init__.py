@@ -90,6 +90,16 @@ from qdap.broker.markov_bptt import BPTTMarkovEstimator
 
 # ── Security ─────────────────────────────────────────────────────────────────
 from qdap.security.session_ticket import SessionTicket, SessionTicketStore
+from qdap.security.pqc_handshake import (
+    MLKEM768, MLDSASignature, HybridKeyPair, SecurityMode,
+    generate_hybrid_keypair, hybrid_encapsulate, hybrid_decapsulate,
+    pqc_handshake_initiator, pqc_handshake_responder,
+    PQCHandshakeResult, security_summary,
+)
+
+# ── Protocol (NattyNet-inspired) ─────────────────────────────────────────────
+from qdap.protocol.channel_stamps import ChannelStamp, stamp_from_scheduler
+from qdap.protocol.decision_dag import DecisionDAG, build_send_dag
 
 # ── Server ───────────────────────────────────────────────────────────────────
 from qdap.server import QDAPServer, QDAPClient
@@ -123,6 +133,23 @@ __all__ = [
     # Security
     "SessionTicket",
     "SessionTicketStore",
+    # Post-Quantum Cryptography
+    "MLKEM768",
+    "MLDSASignature",
+    "HybridKeyPair",
+    "SecurityMode",
+    "PQCHandshakeResult",
+    "generate_hybrid_keypair",
+    "hybrid_encapsulate",
+    "hybrid_decapsulate",
+    "pqc_handshake_initiator",
+    "pqc_handshake_responder",
+    "security_summary",
+    # Protocol (NattyNet-inspired)
+    "ChannelStamp",
+    "stamp_from_scheduler",
+    "DecisionDAG",
+    "build_send_dag",
     # Server
     "QDAPServer",
     "QDAPClient",

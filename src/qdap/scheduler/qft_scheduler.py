@@ -173,6 +173,24 @@ class QFTScheduler:
     """
     Quantum Fourier Transform-Based Packet Scheduler (v2 — log-linear).
 
+    Architecture Note:
+        This scheduler implements the QDP analog described in
+        quantum networking literature [Arch-TCOM'26], where
+        a data plane carries and manipulates resources based
+        on control plane decisions. Here, channel state (RTT,
+        loss) drives scheduling decisions across all protocol
+        layers — analogous to entanglement management in
+        quantum networks.
+
+        Unlike quantum implementations requiring hardware,
+        this operates on classical TCP infrastructure using
+        FFT-based channel analysis. O(n log n) complexity,
+        formal convergence in t* = ⌈log(ε)/log(1-lr)⌉ steps.
+
+    References:
+        [Arch-TCOM'26] NattyNet: QCP/QDP separation for quantum networks
+        [QIRG Draft'25] Quantum Internet Research Group architecture
+
     İki katmanlı yapı:
       1. Trafik analizi (FFT): gelen paket akışını frekans domenine çevirir,
          BulkTransfer / LatencyFirst / AdaptiveHybrid stratejisi seçer.

@@ -23,25 +23,30 @@ classifiers = [
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
-    "scipy>=1.12",
     "cryptography>=42.0",
-    "rich>=13.0",
-    "matplotlib>=3.8",
     "aiohttp>=3.9",
     "websockets>=12.0",
 ]
 
 [project.optional-dependencies]
+# pip install qdap[viz]    — benchmark grafikleri ve analiz
+viz    = ["matplotlib>=3.8", "rich>=13.0", "scipy>=1.12"]
+# pip install qdap[qiskit] — Qiskit dogrulama (opsiyonel)
 qiskit = ["qiskit>=1.0", "qiskit-aer>=0.14"]
-quic = ["aioquic>=1.0"]
-dev = [
+# pip install qdap[quic]   — QUIC/HTTP3 transport
+quic   = ["aioquic>=1.0"]
+# pip install qdap[dev]    — gelistirme ve test araclari
+dev    = [
     "pytest>=8.0",
     "pytest-asyncio",
     "pytest-timeout",
     "psutil>=5.9",
     "hypothesis>=6.0",
+    "rich>=13.0",
+    "scipy>=1.12",
 ]
-all = ["qdap[qiskit,quic,dev]"]
+# pip install qdap[all]    — her sey
+all    = ["qdap[viz,qiskit,quic,dev]"]
 
 [project.urls]
 Homepage = "https://github.com/qdap-protocol/qdap"
