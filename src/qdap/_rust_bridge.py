@@ -273,6 +273,19 @@ def qft_decide_deadline_aware(
     return (chunk_size, strategy, False)
 
 
+def qft_get_weights() -> list[float]:
+    """Current softmax weights [w_0..w_4] — Σ=1. Rust: thread-local theta, Python: uniform."""
+    if RUST_AVAILABLE:
+        return list(_rust.qft_get_weights())
+    return [0.2] * 5  # uniform (no persistent state in pure-Python bridge)
+
+
+def qft_reset_weights() -> None:
+    """Reset Rust theta to uniform (no-op when Rust not available)."""
+    if RUST_AVAILABLE:
+        _rust.qft_reset_weights()
+
+
 def qft_benchmark(n: int) -> float:
     if RUST_AVAILABLE:
         return _rust.qft_benchmark(n)
@@ -289,21 +302,34 @@ def qft_benchmark(n: int) -> float:
 
 
 def _python_qft_decide(payload_size: int, rtt_ms: float, loss_rate: float) -> tuple:
+    # Identical normalization to Rust channel_log_scores and Python qft_scheduler._channel_log_scores:
+    # ln-normalization for payload + RTT (robust to outlier values), linear for loss.
     import math
-    payload_norm = min(max(math.log10(max(payload_size, 1)), 0.0) / 8.0, 1.0)
-    rtt_norm = min(rtt_ms / 500.0, 1.0)
-    loss_norm = min(loss_rate / 0.2, 1.0)
+    _LN_MAX_PAYLOAD = math.log(100 * 1024 * 1024)  # ln(100 MB)
+    _LN_MAX_RTT     = math.log(501.0)               # ln(501 ms)
+    _EPS            = 1e-9
+
+    payload_norm = min(math.log(payload_size + 1) / _LN_MAX_PAYLOAD, 1.0)
+    rtt_norm     = min(math.log(rtt_ms + 1)     / _LN_MAX_RTT,     1.0)
+    loss_norm    = min(loss_rate / 0.2, 1.0)
+
+    # log1p scores — same coefficients as Rust qft_scheduler.rs channel_log_scores
     scores = [
-        (1.0 - payload_norm) * 0.3 + loss_norm * 0.5 + (1.0 - rtt_norm) * 0.2,
-        (1.0 - payload_norm)**2 * 0.4 + (1.0 - loss_norm) * loss_norm * 0.4 + 0.2,
-        max(1.0 - abs(payload_norm - 0.5) * 2.0, 0.0) * 0.5 + (1.0 - loss_norm) * 0.3 + 0.2,
-        payload_norm * 0.4 + (1.0 - loss_norm) * 0.4 + rtt_norm * 0.2,
-        payload_norm**2 * 0.5 + (1.0 - loss_norm)**2 * 0.4 + (1.0 - rtt_norm) * 0.1,
+        # MICRO: small payload + high loss + high RTT → small chunks
+        math.log1p((1-payload_norm)*0.35 + loss_norm*0.45 + rtt_norm*0.20),
+        # SMALL: small-medium payload + moderate loss
+        math.log1p((1-payload_norm)**2 * 0.40 + loss_norm*(1-loss_norm)*0.40 + 0.20),
+        # MEDIUM: mid payload, normal conditions
+        math.log1p(max(1 - abs(payload_norm-0.5)*2, 0)*0.50 + (1-loss_norm)*0.30 + 0.20),
+        # LARGE: large payload + low loss + high RTT
+        math.log1p(payload_norm*0.40 + (1-loss_norm)*0.40 + rtt_norm*0.20),
+        # JUMBO: huge payload + zero loss + low RTT (LAN)
+        math.log1p(payload_norm**2 * 0.50 + (1-loss_norm)**2 * 0.40 + (1-rtt_norm)*0.10),
     ]
     CHUNK_SIZES = [4096, 16384, 65536, 262144, 1048576]
     best_idx = max(range(len(scores)), key=lambda i: scores[i])
     sorted_scores = sorted(scores, reverse=True)
-    confidence = min((sorted_scores[0] - sorted_scores[1]) / sorted_scores[0], 1.0)
+    confidence = min((sorted_scores[0] - sorted_scores[1]) / (sorted_scores[0] + _EPS), 1.0)
     return (CHUNK_SIZES[best_idx], best_idx, confidence)
 
 

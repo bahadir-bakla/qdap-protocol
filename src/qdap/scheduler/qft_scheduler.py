@@ -58,8 +58,9 @@ from qdap.scheduler.strategies import (
     LatencyFirstStrategy,
     SchedulingStrategy,
 )
-from qdap._rust_bridge import qft_decide as _decide
-from qdap._rust_bridge import qft_decide_deadline_aware as _decide_dl
+from qdap._rust_bridge import RUST_AVAILABLE as _RUST_AVAILABLE
+from qdap._rust_bridge import qft_decide as _decide_rust
+from qdap._rust_bridge import qft_decide_deadline_aware as _decide_dl_rust
 from qdap.scheduler.session_cache import SessionCache
 
 # Modül-level global cache (tüm session'lar paylaşır)
@@ -377,19 +378,20 @@ class QFTScheduler:
         rtt  = rtt_ms   if rtt_ms   is not None else self._estimated_rtt_ms
         loss = loss_rate if loss_rate is not None else self._estimated_loss_rate
 
-        # Rust bridge: mevcut ve hızlıysa kullan
-        try:
-            chunk_size, strategy_idx, confidence = _decide(
-                payload_size, rtt, loss
-            )
-            # Rust sonucuna göre Python ağırlıklarını da güncelle
-            self._update_theta(strategy_idx, _softmax(self._theta))
-            self.n_decisions += 1
-            return self._make_chunk_strategy(chunk_size, strategy_idx, confidence)
-        except Exception:
-            pass
+        # Rust bridge: only when Rust is actually compiled (avoids stateless Python bridge fallback)
+        if _RUST_AVAILABLE:
+            try:
+                chunk_size, strategy_idx, confidence = _decide_rust(
+                    payload_size, rtt, loss
+                )
+                # Mirror Rust decision into Python theta (for monitoring / session save)
+                self._update_theta(strategy_idx, _softmax(self._theta))
+                self.n_decisions += 1
+                return self._make_chunk_strategy(chunk_size, strategy_idx, confidence)
+            except Exception:
+                pass
 
-        # Python log-linear fallback
+        # Python log-linear fallback (stateful self._theta, same formulas as Rust)
         ch = _channel_log_scores(payload_size, rtt, loss)
         w  = _softmax(self._theta)
         combined = [math.log(w[i] + EPS) + ch[i] for i in range(5)]
@@ -679,18 +681,19 @@ class QFTScheduler:
         """
         rtt = rtt_ms if rtt_ms is not None else self._estimated_rtt_ms
 
-        # Rust bridge dene
-        try:
-            loss = loss_rate if loss_rate is not None else self._estimated_loss_rate
-            chunk, strat, emergency = _decide_dl(
-                payload_size, rtt, loss, deadline_ms, elapsed_ms
-            )
-            if emergency:
-                self._update_theta(STRATEGY_MICRO, _softmax(self._theta))
-                self.n_decisions += 1
-            return chunk, strat, emergency
-        except Exception:
-            pass
+        # Rust bridge: only when Rust is compiled
+        if _RUST_AVAILABLE:
+            try:
+                loss = loss_rate if loss_rate is not None else self._estimated_loss_rate
+                chunk, strat, emergency = _decide_dl_rust(
+                    payload_size, rtt, loss, deadline_ms, elapsed_ms
+                )
+                if emergency:
+                    self._update_theta(STRATEGY_MICRO, _softmax(self._theta))
+                    self.n_decisions += 1
+                return chunk, strat, emergency
+            except Exception:
+                pass
 
         # Python fallback
         remaining = deadline_ms - elapsed_ms
