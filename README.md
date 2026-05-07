@@ -3,6 +3,7 @@
 > **Emergency-First Delivery** · **Rate-Adaptive FEC** · **Ghost Session** · **Deadline-Aware Scheduling**
 
 [![Tests](https://github.com/bahadir-bakla/qdap-protocol/actions/workflows/test.yml/badge.svg)](https://github.com/bahadir-bakla/qdap-protocol/actions)
+[![PyPI](https://img.shields.io/pypi/v/qdap.svg)](https://pypi.org/project/qdap/)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 [![Rust](https://img.shields.io/badge/rust-1.75+-orange.svg)](https://rustup.rs)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -49,6 +50,13 @@ Within 50ms:       QDAP 99.8%  vs  HTTP/1.1 92.8%
 ## Installation
 
 ```bash
+pip install qdap
+```
+
+**From source:**
+```bash
+git clone https://github.com/bahadir-bakla/qdap-protocol.git
+cd qdap-protocol
 pip install -e ".[dev]"
 ```
 
@@ -66,19 +74,37 @@ The library works fully without Rust — pure Python fallback is automatic.
 ## Quickstart
 
 ```python
-from qdap import QDAPServer, QDAPClient, QFTScheduler, AdaptiveFEC
+from qdap import QDAPServer, QDAPClient, AdaptiveFEC, DeltaEncoder
 
-# Schedule chunk size based on network conditions
-scheduler = QFTScheduler()
-chunk = scheduler.decide(payload_size=64 * 1024, rtt_ms=300, loss_rate=0.35)
-
-# Encode with adaptive FEC for emergency delivery
+# Emergency-priority message
 fec = AdaptiveFEC()
-packets, profile = fec.encode(b"emergency telemetry", is_emergency=True)
-print(chunk, profile.label, len(packets))
+fec.observe_loss(lost=7, sent=20)          # 35% channel loss
+packets, profile = fec.encode(b"SOS: evacuation needed", is_emergency=True)
+print(f"{profile.label} — {len(packets)} coded packets")
+
+# Run a server
+server = QDAPServer("0.0.0.0", 19876)
+await server.start()
+
+# Connect from another device
+async with QDAPClient("192.168.1.50", 19876) as client:
+    await client.send_multiframe(
+        payloads=[b"[EMERGENCY] Zone 4 fire"],
+        deadline_ms=[50.0],
+    )
 ```
 
-More examples in `examples/`.
+### Two-device LAN demo
+
+```bash
+# Device A (server) — run first
+python examples/lan_demo.py server
+
+# Device B (client) — replace IP with Device A's LAN IP
+python examples/lan_demo.py client 192.168.1.50
+```
+
+More examples in `examples/` — see `quickstart.py`, `lan_demo.py`, `iot/`, `video/`.
 
 ---
 
