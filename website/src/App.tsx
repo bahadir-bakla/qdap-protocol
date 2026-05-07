@@ -1304,7 +1304,7 @@ function App() {
               when Rust is absent, compiled hot paths when the core is available.
             </p>
             <div className="install-actions">
-              <a href="https://github.com/qdap-protocol/qdap">
+              <a href="https://github.com/bahadir-bakla/qdap-protocol">
                 <Github size={18} />
                 GitHub
               </a>
