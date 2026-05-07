@@ -84,3 +84,4 @@ demo.txt
 
 # Website (deployed separately to VPS)
 website/
+benchmarks/results/
