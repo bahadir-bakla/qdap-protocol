@@ -18,6 +18,15 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional, Tuple
 
+from qdap._rust_bridge import (
+    delta_change_ratio as _delta_change_ratio,
+    delta_compute_bitmask as _delta_compute_bitmask,
+    delta_get_payload as _delta_get_payload,
+    delta_parse_header as _delta_parse_header,
+    delta_wrap_delta as _delta_wrap_delta,
+    delta_wrap_full as _delta_wrap_full,
+)
+
 try:
     import msgpack
     HAS_MSGPACK = True
@@ -80,10 +89,12 @@ class DeltaEncoder:
             k: v for k, v in data.items()
             if v != self._baseline.get(k)
         }
-        change_ratio = len(changed) / max(len(data), 1)
+        change_ratio, should_send_full = _delta_change_ratio(
+            len(data), len(changed), DELTA_THRESHOLD, MAX_FIELDS
+        )
 
         # Çok fazla değişim → FULL daha verimli
-        if change_ratio > DELTA_THRESHOLD or len(data) > MAX_FIELDS:
+        if should_send_full:
             return self._encode_full(data)
 
         return self._encode_delta(changed, data)
@@ -92,20 +103,19 @@ class DeltaEncoder:
         self._baseline   = dict(data)
         self._field_order = list(data.keys())
         payload = _encode(data)
-        return bytes([FRAME_FULL]) + payload
+        return _delta_wrap_full(payload)
 
     def _encode_delta(self, changed: Dict, full_data: Dict) -> bytes:
         if not changed:
             # Hiçbir şey değişmedi — sadece bitmask=0
             self._baseline = dict(full_data)
-            return bytes([FRAME_DELTA]) + b'\x00\x00'
+            return _delta_wrap_delta(0, b"")
 
         # Bitmask: hangi field'lar değişti?
-        bitmask = 0
+        bitmask = _delta_compute_bitmask(self._field_order, list(changed.keys()))
         values  = {}
         for i, key in enumerate(self._field_order):
             if key in changed:
-                bitmask |= (1 << i)
                 values[key] = changed[key]
 
         self._baseline.update(changed)
@@ -115,7 +125,7 @@ class DeltaEncoder:
         self._bytes_saved += len(full_payload) - len(payload) - 2
 
         self._delta_count += 1
-        return bytes([FRAME_DELTA]) + struct.pack(">H", bitmask) + payload
+        return _delta_wrap_delta(bitmask, payload)
 
     @property
     def compression_ratio(self) -> float:
@@ -152,8 +162,11 @@ class DeltaDecoder:
         if not frame:
             return None
 
-        frame_type = frame[0]
-        body       = frame[1:]
+        try:
+            frame_type, bitmask = _delta_parse_header(frame)
+            body = _delta_get_payload(frame)
+        except ValueError:
+            return None
 
         if frame_type == FRAME_FULL:
             data = _decode(body)
@@ -165,14 +178,10 @@ class DeltaDecoder:
             if self._baseline is None:
                 return None  # Baseline yok, full bekle
 
-            if len(body) < 2:
-                return None
-
-            bitmask = struct.unpack_from(">H", body, 0)[0]
             if bitmask == 0:
                 return dict(self._baseline)  # Hiçbir şey değişmedi
 
-            changed = _decode(body[2:])
+            changed = _decode(body)
             result  = dict(self._baseline)
             result.update(changed)
             self._baseline = result

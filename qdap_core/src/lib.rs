@@ -9,6 +9,9 @@ mod amplitude;
 mod qframe;
 mod qft_scheduler;
 mod chunker;
+mod fec;
+mod delta;
+mod ghost_session;
 
 /// QDAP Core — Rust ile hızlandırılmış kriptografi ve hesaplama.
 /// Python'dan `import qdap_core` ile kullanılır.
@@ -44,6 +47,31 @@ fn qdap_core(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(chunker::split_payload, m)?)?;
     m.add_function(wrap_pyfunction!(chunker::calculate_optimal_chunk_size, m)?)?;
     m.add_function(wrap_pyfunction!(chunker::plan_parallel_chunks, m)?)?;
+
+    // QFT weights (monitoring / session save-restore)
+    m.add_function(wrap_pyfunction!(qft_scheduler::qft_get_weights, m)?)?;
+    m.add_function(wrap_pyfunction!(qft_scheduler::qft_reset_weights, m)?)?;
+
+    // FEC — XOR systematic (k, r) code
+    m.add_function(wrap_pyfunction!(fec::fec_encode, m)?)?;
+    m.add_function(wrap_pyfunction!(fec::fec_decode, m)?)?;
+    m.add_function(wrap_pyfunction!(fec::fec_effective_loss, m)?)?;
+    m.add_function(wrap_pyfunction!(fec::fec_select_profile, m)?)?;
+    m.add_function(wrap_pyfunction!(fec::fec_ema_update, m)?)?;
+
+    // Delta encoding — protocol framing layer
+    m.add_function(wrap_pyfunction!(delta::delta_wrap_full, m)?)?;
+    m.add_function(wrap_pyfunction!(delta::delta_wrap_delta, m)?)?;
+    m.add_function(wrap_pyfunction!(delta::delta_parse_header, m)?)?;
+    m.add_function(wrap_pyfunction!(delta::delta_get_payload, m)?)?;
+    m.add_function(wrap_pyfunction!(delta::delta_compute_bitmask, m)?)?;
+    m.add_function(wrap_pyfunction!(delta::delta_fields_from_bitmask, m)?)?;
+    m.add_function(wrap_pyfunction!(delta::delta_change_ratio, m)?)?;
+
+    // Ghost Session — HMAC signing + window state machine
+    m.add_function(wrap_pyfunction!(ghost_session::ghost_sign, m)?)?;
+    m.add_function(wrap_pyfunction!(ghost_session::ghost_verify, m)?)?;
+    m.add_class::<ghost_session::GhostWindow>()?;
 
     // Sabitler
     m.add("QFRAME_HEADER_SIZE", qframe::HEADER_SIZE)?;

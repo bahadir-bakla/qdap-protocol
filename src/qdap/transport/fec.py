@@ -33,6 +33,13 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Tuple
 
+from qdap._rust_bridge import (
+    fec_ema_update as _fec_ema_update,
+    fec_encode as _fec_encode_rust,
+    fec_effective_loss as _fec_effective_loss,
+    fec_select_profile as _fec_select_profile,
+)
+
 
 # ── FEC Profiles ───────────────────────────────────────────────────────────────
 
@@ -83,18 +90,33 @@ def fec_effective_loss(raw_loss: float, k: int, r: int) -> float:
         >>> fec_effective_loss(0.35, k=1, r=0)  # NONE
         0.35
     """
-    if r == 0:
-        return raw_loss
-    n = k + r
-    p = max(0.0, min(1.0, raw_loss))
-    q = 1.0 - p
+    return _fec_effective_loss(raw_loss, k, r)
 
-    # P(irrecoverable) = P(more than r losses in n packets)
-    p_fail = sum(
-        math.comb(n, i) * (p ** i) * (q ** (n - i))
-        for i in range(r + 1, n + 1)
-    )
-    return p_fail
+
+def select_bulk_fec_profile(
+    loss_rate: float,
+    rtt_ms: float = 50.0,
+) -> FECProfile:
+    """
+    Select FEC profile optimised for bulk / large-file transfers.
+
+    Emergency profile (4KB micro chunks) is designed for urgent messages, not bulk.
+    For large files, RTT cost per retry dominates bandwidth cost of FEC overhead.
+    At high RTT the optimal strategy is aggressive FEC (fewer retries needed).
+
+    Decision:
+      - crisis (>20% loss) + high RTT (>150ms): BALANCED (k=2,r=2) → p_eff=12.6%
+      - crisis + moderate RTT: RELIABLE (k=2,r=1) → p_eff=28.2%
+      - moderate loss (5-20%): RELIABLE
+      - low loss (<5%): NONE
+    """
+    if loss_rate >= 0.20 and rtt_ms >= 150:
+        return FECProfile.BALANCED    # Prioritise delivery over bandwidth
+    if loss_rate >= 0.20:
+        return FECProfile.RELIABLE
+    if loss_rate >= 0.05:
+        return FECProfile.RELIABLE
+    return FECProfile.NONE
 
 
 def select_fec_profile(
@@ -119,17 +141,15 @@ def select_fec_profile(
     Returns:
         Recommended FECProfile
     """
-    if is_emergency:
-        # k=1, r=2 → 3× overhead → any 1 of 3 packets sufficient
-        if max_overhead >= 3.0:
-            return FECProfile.EMERGENCY
-        return FECProfile.AGGRESSIVE  # 2× overhead fallback
+    label, _, _ = _fec_select_profile(loss_rate, is_emergency, max_overhead)
+    return _profile_from_label(label)
 
-    if loss_rate >= 0.20:
-        return FECProfile.BALANCED    # 2× overhead, 2.8× improvement
-    if loss_rate >= 0.05:
-        return FECProfile.RELIABLE    # 1.5× overhead, 1.2× improvement
-    return FECProfile.NONE
+
+def _profile_from_label(label: str) -> FECProfile:
+    for profile in FECProfile:
+        if profile.label == label:
+            return profile
+    raise ValueError(f"Unknown FEC profile: {label}")
 
 
 # ── FEC Encoder ───────────────────────────────────────────────────────────────
@@ -179,6 +199,27 @@ class FECEncoder:
         k, r = self.profile.k, self.profile.r
         if not data_packets:
             raise ValueError("data_packets cannot be empty")
+
+        if len(data_packets) == 1:
+            coded = _fec_encode_rust(data_packets[0], k, r)
+            block = FECBlock(
+                sequence=self._sequence,
+                data_packets=coded[:k],
+                parity_packets=coded[k:],
+                profile=self.profile,
+            )
+            self._sequence += 1
+            return block
+
+        if k == 1:
+            block = FECBlock(
+                sequence=self._sequence,
+                data_packets=list(data_packets),
+                parity_packets=[data_packets[0] for _ in range(r)],
+                profile=self.profile,
+            )
+            self._sequence += 1
+            return block
 
         # Work on fixed-size blocks (zero-pad to max length)
         max_len = max(len(p) for p in data_packets)
@@ -291,10 +332,9 @@ class AdaptiveFEC:
 
     def observe_loss(self, lost: int, sent: int) -> None:
         """Update loss estimate via exponential moving average."""
-        if sent > 0:
-            sample = lost / sent
-            self._observed_loss = (1 - self._alpha) * self._observed_loss + \
-                                   self._alpha * sample
+        self._observed_loss = _fec_ema_update(
+            self._observed_loss, lost, sent, self._alpha
+        )
 
     @property
     def current_loss(self) -> float:
@@ -305,14 +345,28 @@ class AdaptiveFEC:
         data: bytes,
         is_emergency: bool = False,
         max_overhead: float = 3.0,
+        is_bulk: bool = False,
+        rtt_ms: float = 50.0,
     ) -> Tuple[List[bytes], FECProfile]:
         """
         Encode data with adaptively-selected FEC profile.
 
+        Args:
+            data:         payload to encode
+            is_emergency: select emergency profile for urgent small messages
+            max_overhead: max allowed bandwidth multiplier (default 3×)
+            is_bulk:      bulk/streaming mode — use RTT-optimal profile instead of
+                          emergency micro-chunk profile (set True for files ≥256KB)
+            rtt_ms:       round-trip time hint for bulk profile selection
+
         Returns:
             (coded_packets, profile_used)
         """
-        profile = select_fec_profile(self._observed_loss, is_emergency, max_overhead)
+        if is_bulk:
+            profile = select_bulk_fec_profile(self._observed_loss, rtt_ms)
+        else:
+            profile = select_fec_profile(self._observed_loss, is_emergency, max_overhead)
+
         self._encoder.profile = profile
 
         if profile == FECProfile.NONE:

@@ -111,3 +111,57 @@ class TestAmplitude:
         from qdap._rust_bridge import compute_deadline_weights
         weights = compute_deadline_weights([2.0, 500.0])
         assert weights[0] > weights[1]   # Emergency > routine
+
+
+class TestFECBridge:
+
+    def test_emergency_encode_uses_three_copies(self):
+        from qdap._rust_bridge import fec_encode
+        packets = fec_encode(b"emergency", 1, 2)
+        assert packets == [b"emergency", b"emergency", b"emergency"]
+
+    def test_emergency_decode_recovers_from_original_loss(self):
+        from qdap._rust_bridge import fec_decode, fec_encode
+        packets = fec_encode(b"emergency", 1, 2)
+        recovered = fec_decode([None, packets[1], packets[2]], 1, 2, len(b"emergency"))
+        assert recovered == b"emergency"
+
+    def test_effective_loss_emergency_matches_binomial(self):
+        from qdap._rust_bridge import fec_effective_loss
+        assert abs(fec_effective_loss(0.35, 1, 2) - 0.35 ** 3) < 1e-12
+
+
+class TestDeltaBridge:
+
+    def test_full_frame_roundtrip(self):
+        from qdap._rust_bridge import delta_get_payload, delta_parse_header, delta_wrap_full
+        frame = delta_wrap_full(b"payload")
+        assert delta_parse_header(frame) == (0, 0)
+        assert delta_get_payload(frame) == b"payload"
+
+    def test_delta_frame_roundtrip(self):
+        from qdap._rust_bridge import delta_get_payload, delta_parse_header, delta_wrap_delta
+        frame = delta_wrap_delta(0b0101, b"changed")
+        assert delta_parse_header(frame) == (1, 0b0101)
+        assert delta_get_payload(frame) == b"changed"
+
+
+class TestGhostBridge:
+
+    def test_sign_verify_roundtrip(self):
+        from qdap._rust_bridge import ghost_sign, ghost_verify
+        key = b"k" * 32
+        sig = ghost_sign(key, 42, b"payload")
+        assert len(sig) == 8
+        assert ghost_verify(key, 42, b"payload", sig)
+        assert not ghost_verify(key, 43, b"payload", sig)
+
+    def test_ghost_window_ack_tracks_rtt(self):
+        from qdap._rust_bridge import GhostWindow
+        if GhostWindow is None:
+            pytest.skip("Rust GhostWindow not available")
+        window = GhostWindow(4, 10)
+        window.add(1, 1_000_000, b"hash")
+        assert window.pending_count == 1
+        assert window.implicit_ack(1, 11_000_000) == 10.0
+        assert window.pending_count == 0

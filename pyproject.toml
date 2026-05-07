@@ -7,7 +7,7 @@ name = "qdap"
 version = "0.1.0"
 description = "Quantum-Inspired Dynamic Application Protocol"
 license = { text = "MIT" }
-authors = [{ name = "QDAP Team" }]
+authors = [{ name = "Bahadir Bakla", email = "bahadirbakla@gmail.com" }]
 keywords = [
     "quantum-inspired", "networking", "protocol",
     "quantum-computing", "application-layer", "6G"
@@ -24,6 +24,7 @@ requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
     "cryptography>=42.0",
+    "msgpack>=1.0",
     "aiohttp>=3.9",
     "websockets>=12.0",
 ]
@@ -52,8 +53,9 @@ all    = ["qdap[viz,qiskit,quic,dev]"]
 qdap = "qdap.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/qdap-protocol/qdap"
-Issues = "https://github.com/qdap-protocol/qdap/issues"
+Homepage = "https://qdap.dev"
+Repository = "https://github.com/bahadir-bakla/qdap-protocol"
+Issues = "https://github.com/bahadir-bakla/qdap-protocol/issues"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/qdap"]

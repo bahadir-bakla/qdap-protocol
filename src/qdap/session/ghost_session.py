@@ -28,6 +28,10 @@ from cryptography.hazmat.primitives import hashes
 
 from qdap.frame.qframe import QFrame, Subframe, SubframeType, FrameType
 from qdap.session.markov import AdaptiveMarkovChain
+from qdap._rust_bridge import (
+    GhostWindow as _RustGhostWindow,
+    ghost_sign as _ghost_sign,
+)
 
 
 def _derive_ghost_key(shared_secret: bytes, info: bytes = b"ghost-v1", length: int = 32) -> bytes:
@@ -133,6 +137,11 @@ class GhostSession:
 
         # Sent but not yet implicitly acknowledged packets
         self.ghost_window: dict[int, GhostEntry] = {}
+        self._rust_window = (
+            _RustGhostWindow(self.MAX_WINDOW_SIZE, 200)
+            if _RustGhostWindow is not None
+            else None
+        )
 
         # Stats tracking
         self._total_sent = 0
@@ -162,6 +171,8 @@ class GhostSession:
             payload_hash=payload_hash,
         )
         self.ghost_window[seq_num] = entry
+        if self._rust_window is not None:
+            self._rust_window.add(seq_num, entry.sent_at, payload_hash[:8])
         self._total_sent += 1
 
         # Window cleanup: remove oldest entries if window is too large
@@ -222,19 +233,24 @@ class GhostSession:
 
         No ACK packet is sent — Ghost State collapses locally.
         """
-        if received_seq in self.ghost_window:
-            entry = self.ghost_window.pop(received_seq)
-            rtt_sample_ms = (time.monotonic_ns() - entry.sent_at) / 1e6
+        if received_seq not in self.ghost_window:
+            return
 
-            # Update loss model with successful delivery
-            self.loss_model.update("good", rtt_sample_ms)
-            self.sequence_predictor.record_success(received_seq)
-            self._total_acked += 1
-            self._rtt_samples.append(rtt_sample_ms)
+        entry = self.ghost_window.pop(received_seq)
+        now_ns = time.monotonic_ns()
+        rtt_sample_ms = (now_ns - entry.sent_at) / 1e6
+        if self._rust_window is not None:
+            self._rust_window.implicit_ack(received_seq, now_ns)
 
-            # Keep RTT samples bounded
-            if len(self._rtt_samples) > 200:
-                self._rtt_samples = self._rtt_samples[-200:]
+        # Update loss model with successful delivery
+        self.loss_model.update("good", rtt_sample_ms)
+        self.sequence_predictor.record_success(received_seq)
+        self._total_acked += 1
+        self._rtt_samples.append(rtt_sample_ms)
+
+        # Keep RTT samples bounded
+        if len(self._rtt_samples) > 200:
+            self._rtt_samples = self._rtt_samples[-200:]
 
     def detect_loss(self) -> list[int]:
         """
@@ -288,8 +304,7 @@ class GhostSession:
         Both parties can compute the same signature deterministically.
         Uses first 32 bytes of payload + sequence number.
         """
-        msg = seq_num.to_bytes(4, "big") + payload[:32]
-        return hmac.new(self.ghost_key, msg, hashlib.sha256).digest()[:8]
+        return _ghost_sign(self.ghost_key, seq_num, payload)
 
     def _cleanup_window(self) -> None:
         """Remove oldest entries if ghost window exceeds max size."""
@@ -299,6 +314,8 @@ class GhostSession:
             remove_count = len(entries) // 4
             for seq_num, _ in entries[:remove_count]:
                 del self.ghost_window[seq_num]
+                if self._rust_window is not None:
+                    self._rust_window.remove(seq_num)
                 self._total_lost_detected += 1
 
     @property

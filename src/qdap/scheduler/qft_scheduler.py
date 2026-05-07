@@ -394,8 +394,12 @@ class QFTScheduler:
         # Python log-linear fallback (stateful self._theta, same formulas as Rust)
         ch = _channel_log_scores(payload_size, rtt, loss)
         w  = _softmax(self._theta)
-        combined = [math.log(w[i] + EPS) + ch[i] for i in range(5)]
-        best = combined.index(max(combined))
+        ranked = sorted(ch, reverse=True)
+        if ranked[0] - ranked[1] >= 0.03:
+            best = ch.index(ranked[0])
+        else:
+            combined = [math.log(w[i] + EPS) + ch[i] for i in range(5)]
+            best = combined.index(max(combined))
 
         self._update_theta(best, w)
         self.n_decisions += 1

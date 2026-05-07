@@ -14,6 +14,8 @@ pyo3 = { version = "0.20", features = ["extension-module"] }
 # Kriptografi
 aes-gcm   = { version = "0.10", features = ["aes", "std"] }
 sha3      = "0.10"
+sha2      = "0.10"
+hmac      = "0.12"
 digest    = "0.10"
 x25519-dalek = { version = "2.0", features = ["static_secrets"] }
 rand      = "0.8"

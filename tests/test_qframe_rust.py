@@ -64,6 +64,10 @@ class TestQFrameRust:
 
 class TestQFTSchedulerRust:
 
+    def setup_method(self):
+        from qdap._rust_bridge import qft_reset_weights
+        qft_reset_weights()
+
     def test_small_payload_high_loss_small_chunk(self):
         from qdap._rust_bridge import qft_decide
         chunk, strategy, confidence = qft_decide(512, 100.0, 0.15)

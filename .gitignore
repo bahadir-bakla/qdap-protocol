@@ -72,3 +72,16 @@ crash.*.log
 # Generated docs & results
 *.md
 *.json
+
+# Release artifacts & logs
+release_results/
+graphify-out/
+
+# Screenshots & temp files
+benchmarks/*.png
+benchmarks/*.jpg
+demo.txt
+
+# Website build output
+website/dist/
+website/node_modules/

@@ -48,6 +48,8 @@ pub const STRATEGY_NAMES: [&str; 5] = [
 const LR: f64 = 0.15;
 // Sayısal kararlılık için küçük epsilon
 const EPS: f64 = 1e-9;
+// Kanal gözlemi belirginse geçmiş ağırlığın kilitlenmesini kır.
+const CHANNEL_OVERRIDE_MARGIN: f64 = 0.03;
 // Pencere boyutu (observation window)
 const WINDOW: usize = 1024;
 
@@ -158,7 +160,25 @@ pub fn qft_decide(
 
     let ch_scores = channel_log_scores(payload_size, rtt_ms, loss_rate);
 
+    let mut channel_best = 0usize;
+    let mut channel_top = f64::NEG_INFINITY;
+    let mut channel_second = f64::NEG_INFINITY;
+    for i in 0..5 {
+        let score = ch_scores[i];
+        if score > channel_top {
+            channel_second = channel_top;
+            channel_top = score;
+            channel_best = i;
+        } else if score > channel_second {
+            channel_second = score;
+        }
+    }
+
     let best_idx = THETA.with(|t| {
+        if channel_top - channel_second >= CHANNEL_OVERRIDE_MARGIN {
+            return channel_best;
+        }
+
         let theta = t.borrow();
         let w = softmax(&*theta);
 
