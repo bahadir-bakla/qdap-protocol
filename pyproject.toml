@@ -63,3 +63,9 @@ packages = ["src/qdap"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
+markers = [
+    "integration: integration tests that require running services",
+]
+filterwarnings = [
+    "ignore::pytest.PytestUnknownMarkWarning",
+]

@@ -8,6 +8,8 @@ Tests for QDAP QUIC transport adapter.
 import asyncio
 import pytest
 
+pytest.importorskip("aioquic", reason="aioquic not installed — skipping QUIC tests")
+
 from qdap.transport.quic.adapter import QDAPQUICAdapter, generate_self_signed_cert
 from qdap.frame.qframe import QFrame, Subframe, SubframeType
 
