@@ -9,7 +9,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write  # Trusted Publisher (OIDC) icin
 
 jobs:
   build:
@@ -83,19 +82,13 @@ jobs:
     name: Publish to PyPI
     needs: [build, test-install]
     runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/p/qdap
-
     steps:
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
 
-      - name: Publish to PyPI (Trusted Publisher / OIDC)
+      - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        # OIDC trusted publisher — PyPI'da "qdap-protocol/qdap" repo ayarlanmali
-        # PYPI_API_TOKEN secret alternatifi:
-        # with:
-        #   password: ${{ secrets.PYPI_API_TOKEN }}
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
