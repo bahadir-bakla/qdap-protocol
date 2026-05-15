@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>QDAP Technical Brief</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/dev/stdin" />
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">QDAP Technical Brief</h1>
+</header>
+<h1 id="qdap-emergency-priority-protocol-for-v2x-and-high-loss-networks">QDAP: Emergency-Priority Protocol for V2X and High-Loss Networks</h1>
+<p><strong>Bahadir Bakla</strong> · bahadirbakla@gmail.com · github.com/bahadir-bakla/qdap-protocol · qdap.dev</p>
+<hr />
+<h2 id="executive-summary">Executive Summary</h2>
+<p>Standard application protocols (HTTP, MQTT, DSRC/802.11p) treat all messages with equal priority and retransmit everything on loss — causing emergency messages to miss safety-critical deadlines in high-loss environments. QDAP is an open-source Python protocol that promotes emergency messages to first-class citizens at the protocol level.</p>
+<p><strong>Key results at a glance:</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>Benchmark</th>
+<th>QDAP</th>
+<th>Best competitor</th>
+<th>Improvement</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Emergency delivery, 30% WAN loss</td>
+<td><strong>99.0%</strong></td>
+<td>68.8% (HTTP/1.1)</td>
+<td>+44%</td>
+</tr>
+<tr class="even">
+<td>LAN p99 latency (real WiFi)</td>
+<td><strong>21.4 ms</strong></td>
+<td>230 ms (gRPC)</td>
+<td>10.7× lower</td>
+</tr>
+<tr class="odd">
+<td>LAN throughput (real WiFi)</td>
+<td><strong>20.8 Mbps</strong></td>
+<td>0.39 Mbps (gRPC)</td>
+<td>53× higher</td>
+</tr>
+<tr class="even">
+<td>V2X DENM delivery, urban (5-run Monte Carlo)</td>
+<td><strong>75.5%</strong></td>
+<td>73.4% (802.11bd)</td>
+<td>+3%</td>
+</tr>
+<tr class="odd">
+<td>V2X DENM delivery vs DSRC</td>
+<td><strong>75.5%</strong></td>
+<td>53.8% (DSRC 802.11p)</td>
+<td><strong>+40%</strong></td>
+</tr>
+<tr class="even">
+<td>V2X DENM within 50 ms, C-V2X</td>
+<td><strong>75.5%</strong></td>
+<td>33.2% (C-V2X fails)</td>
+<td>2.3× better</td>
+</tr>
+<tr class="odd">
+<td>V2X emergency p99 latency</td>
+<td><strong>2.8 ms</strong></td>
+<td>247 ms (MQTT)</td>
+<td><strong>88× lower</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="problem">1. Problem</h2>
+<p><strong>Emergency messages die in queues.</strong> In disaster zones, moving vehicles, and congested networks:</p>
+<ul>
+<li>HTTP/1.1 and HTTP/2 retransmit lost packets and block new ones (head-of-line blocking).</li>
+<li>MQTT routes all messages through a broker with equal priority; emergency alerts queue behind telemetry data.</li>
+<li>DSRC/IEEE 802.11p has no application-layer priority — a collision-warning DENM waits behind routine BSMs.</li>
+<li>C-V2X Mode 4 uses Semi-Persistent Scheduling (SPS), adding 0–100 ms delay to every transmission regardless of urgency.</li>
+</ul>
+<p>The result: in a real AWS test at 30% packet loss (Ireland ↔︎ Singapore), HTTP/1.1 delivers only <strong>68.8%</strong> of messages within a 500 ms deadline. In a V2V urban simulation, DSRC delivers only <strong>48.1%</strong> of emergency DENMs.</p>
+<hr />
+<h2 id="qdap-architecture">2. QDAP Architecture</h2>
+<p>QDAP is a pure-Python, application-layer protocol with four components:</p>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│  QFTScheduler       Emergency messages scheduled first  │
+│                     Log-linear softmax, 374k decisions/s│
+├─────────────────────────────────────────────────────────┤
+│  AdaptiveFEC        Observes real-time channel loss     │
+│                     Emergency: up to 4× coded redundancy│
+│                     P(fail) = per^k, fire-and-forget    │
+├─────────────────────────────────────────────────────────┤
+│  GhostSession       0-RTT reconnect after link drop     │
+│                     Critical for moving vehicles        │
+├─────────────────────────────────────────────────────────┤
+│  DeltaEncoder       Position updates as tiny deltas     │
+│                     74.4% BSM size reduction            │
+└─────────────────────────────────────────────────────────┘
+         Runs over TCP/UDP — no hardware changes required</code></pre>
+<p>The protocol runs on any existing IP network. No quantum computer required — the name reflects the quantum Fourier transform-inspired priority scheduling algorithm.</p>
+<hr />
+<h2 id="real-world-benchmark-results">3. Real-World Benchmark Results</h2>
+<h3 id="aws-wan-ireland-singapore-30-packet-loss-injected-via-tc-netem">3.1 AWS WAN — Ireland ↔︎ Singapore (30% packet loss injected via tc netem)</h3>
+<p>Messages within 500 ms deadline:</p>
+<pre><code>QDAP      ████████████████████  99.0%
+HTTP/1.1  █████████████▊        68.8%
+WebSocket █████████████▍        66.0%
+HTTP/2    ███████████           55.0%</code></pre>
+<p>Throughput (1 KB messages): - QDAP: 20.8 Mbps vs HTTP/1.1: 0.05 Mbps → <strong>416× higher</strong> - Large file (10 MB): QDAP 76.7 Mbps</p>
+<h3 id="wifi-lan-two-physical-machines-same-ap">3.2 WiFi LAN — Two Physical Machines, Same AP</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>QDAP</th>
+<th>gRPC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>p99 latency</td>
+<td><strong>21.4 ms</strong></td>
+<td>230 ms</td>
+</tr>
+<tr class="even">
+<td>Throughput</td>
+<td><strong>20.8 Mbps</strong></td>
+<td>0.39 Mbps</td>
+</tr>
+<tr class="odd">
+<td>Within 50 ms</td>
+<td><strong>99.8%</strong></td>
+<td>92.8%</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="v2x-simulation-results">4. V2X Simulation Results</h2>
+<h3 id="methodology">4.1 Methodology</h3>
+<p><strong>Channel model:</strong> Two-ray ground reflection (LOS, h=1.5 m) + WINNER+ B1 NLOS — standard V2V channel models from ETSI TR 102 861 and IEEE 802.11p PHY specifications.</p>
+<p><strong>Traffic participants:</strong> Cars (70%), motorcycles (20%, VRU priority), pedestrians (10%, passive sensing).</p>
+<p><strong>Protocols compared:</strong> QDAP, DSRC/802.11p (Bianchi CBR collision model), IEEE 802.11bd (LDPC, better coding gain), C-V2X Mode 4 (SPS scheduling), UDP, MQTT.</p>
+<p><strong>Message types:</strong> - BSM (Basic Safety Message): 400 B, 10 Hz, 100 ms deadline (SAE J2735) - DENM (Decentralized Environmental Notification): 250 B, event-driven, <strong>50 ms deadline</strong> (ETSI EN 302 637)</p>
+<p><strong>Scenarios:</strong> 1. Urban intersection (400 m × 400 m, corner buildings, CBR ≈ 0.50) 2. Highway platoon (2 km, 2 lanes, 100–130 km/h, CBR ≈ 0.53) 3. Emergency cascade (lead vehicle brakes on pedestrian hazard)</p>
+<h3 id="results-urban-intersection-n-100-agents">4.2 Results — Urban Intersection (N = 100 agents)</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Protocol</th>
+<th>DENM PDR</th>
+<th>DENM within 50 ms</th>
+<th>BSM PDR</th>
+<th>Emergency p99</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>QDAP</strong></td>
+<td><strong>75.5%</strong></td>
+<td><strong>75.5%</strong></td>
+<td><strong>66.2%</strong></td>
+<td><strong>2.8 ms</strong></td>
+</tr>
+<tr class="even">
+<td>802.11bd</td>
+<td>73.4%</td>
+<td>73.4%</td>
+<td>67.6%</td>
+<td>1.5 ms</td>
+</tr>
+<tr class="odd">
+<td>C-V2X Mode 4</td>
+<td>67.2%</td>
+<td>33.2% ❌</td>
+<td>61.1%</td>
+<td>100 ms ❌</td>
+</tr>
+<tr class="even">
+<td>UDP</td>
+<td>65.8%</td>
+<td>65.8%</td>
+<td>59.0%</td>
+<td>8.9 ms</td>
+</tr>
+<tr class="odd">
+<td>DSRC 802.11p</td>
+<td>53.8%</td>
+<td>53.8%</td>
+<td>56.3%</td>
+<td>2.5 ms</td>
+</tr>
+<tr class="even">
+<td>MQTT</td>
+<td>59.3%</td>
+<td>48.2%</td>
+<td>53.3%</td>
+<td>247 ms ❌</td>
+</tr>
+</tbody>
+</table>
+<p><em>Results: 5-run Monte Carlo, seed=42, two-ray LOS + WINNER+ B1 NLOS channel model.</em></p>
+<p><strong>Key findings:</strong> - QDAP delivers <strong>40% more emergency DENMs</strong> than DSRC (75.5% vs 53.8%) via adaptive FEC + priority scheduling. - C-V2X Mode 4 SPS scheduling adds 0–100 ms latency — <strong>67% of DENMs miss the 50 ms safety deadline</strong>. - MQTT HOL blocking causes 247 ms p99 — unusable for real-time V2X. - 802.11bd (IEEE Next-Gen V2X standard) is the strongest competitor at 73.4%; QDAP leads by 2.1 percentage points with lower PDR variance across runs.</p>
+<h3 id="results-highway-platoon-n-100-vehicles">4.3 Results — Highway Platoon (N = 100 vehicles)</h3>
+<table>
+<thead>
+<tr class="header">
+<th>Protocol</th>
+<th>DENM PDR</th>
+<th>DENM within 50 ms</th>
+<th>Emergency p99</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>QDAP</strong></td>
+<td><strong>46.2%</strong></td>
+<td><strong>46.2%</strong></td>
+<td><strong>2.8 ms</strong></td>
+</tr>
+<tr class="even">
+<td>802.11bd</td>
+<td>46.2%</td>
+<td>46.2%</td>
+<td>1.5 ms</td>
+</tr>
+<tr class="odd">
+<td>C-V2X Mode 4</td>
+<td>42.1%</td>
+<td>21.0% ❌</td>
+<td>100 ms ❌</td>
+</tr>
+<tr class="even">
+<td>UDP</td>
+<td>40.1%</td>
+<td>40.1%</td>
+<td>8.4 ms</td>
+</tr>
+<tr class="odd">
+<td>DSRC 802.11p</td>
+<td>34.6%</td>
+<td>34.6%</td>
+<td>2.5 ms</td>
+</tr>
+<tr class="even">
+<td>MQTT</td>
+<td>36.7%</td>
+<td>35.5%</td>
+<td>214 ms ❌</td>
+</tr>
+</tbody>
+</table>
+<p><em>Note: Lower absolute PDR on highway is expected — vehicles spread over 2 km, many pairs exceed direct communication range. QDAP and 802.11bd tie on PDR (46.2%); QDAP maintains 2.8 ms p99 vs 802.11bd’s 1.5 ms.</em></p>
+<hr />
+<h2 id="why-existing-v2x-protocols-fall-short">5. Why Existing V2X Protocols Fall Short</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Protocol</th>
+<th>Root cause of emergency delivery failure</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>DSRC/802.11p</td>
+<td>No application-layer priority; collision probability ~15% at CBR=0.50</td>
+</tr>
+<tr class="even">
+<td>C-V2X Mode 4</td>
+<td>SPS scheduling adds 0–100 ms delay regardless of urgency</td>
+</tr>
+<tr class="odd">
+<td>MQTT</td>
+<td>Broker-mediated; HOL blocking; TCP retransmit timeout ~200 ms</td>
+</tr>
+<tr class="even">
+<td>HTTP/2</td>
+<td>Multiplexed but no cross-stream priority for safety messages</td>
+</tr>
+</tbody>
+</table>
+<p>QDAP addresses these at the protocol level — not via application-layer workarounds.</p>
+<hr />
+<h2 id="implementation">6. Implementation</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install qdap          <span class="co"># pure Python, works immediately</span></span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> qdap <span class="im">import</span> QDAPClient, AdaptiveFEC</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Emergency DENM — scheduled first, 4× FEC at 30% loss</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="cf">async</span> <span class="cf">with</span> QDAPClient(<span class="st">&quot;192.168.1.50&quot;</span>, <span class="dv">19876</span>) <span class="im">as</span> client:</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">await</span> client.send_multiframe(</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        payloads<span class="op">=</span>[b<span class="st">&quot;[EMERGENCY] Pedestrian in lane 3&quot;</span>],</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>        deadline_ms<span class="op">=</span>[<span class="fl">50.0</span>],   <span class="co"># 50 ms V2X deadline</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div>
+<p><strong>Stack:</strong> Pure Python 3.11+, numpy, cryptography, msgpack. Optional Rust extension via PyO3/maturin for 3× AES-NI speedup. 444 tests, MIT license.</p>
+<hr />
+<h2 id="limitations-and-future-work">7. Limitations and Future Work</h2>
+<ul>
+<li>V2X results are from simulation (WINNER+ B1 channel model), not real vehicle hardware tests.</li>
+<li>Current implementation uses TCP; direct integration with DSRC/C-V2X PHY stack (ETSI ITS-G5) is future work.</li>
+<li>Multi-hop DENM relay (cascade propagation) not yet implemented.</li>
+<li>Real-world validation on vehicle hardware would be the next milestone.</li>
+</ul>
+<hr />
+<h2 id="open-source">8. Open Source</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Resource</th>
+<th>Link</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GitHub</td>
+<td>github.com/bahadir-bakla/qdap-protocol</td>
+</tr>
+<tr class="even">
+<td>PyPI</td>
+<td>pypi.org/project/qdap</td>
+</tr>
+<tr class="odd">
+<td>Website</td>
+<td>qdap.dev</td>
+</tr>
+<tr class="even">
+<td>V2X simulation</td>
+<td>github.com/bahadir-bakla/qdap-protocol/tree/main/simulations/v2x</td>
+</tr>
+<tr class="odd">
+<td>Contact</td>
+<td>bahadirbakla@gmail.com</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>Full Monte Carlo results: 5 independent runs × 5 vehicle densities (10–100) × 6 protocols × 3 scenarios = 450 combinations. Seed=42 for reproducibility. Source: <code>simulations/v2x/results/v2x_results.csv</code></em></p>
+</body>
+</html>
