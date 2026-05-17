@@ -16,6 +16,13 @@ from typing import Optional
 from messages import Message, Priority, MsgType
 from channel import snr_to_per
 
+# Use real Rust qdap_core if available; fall back to pure-Python approximation.
+try:
+    import qdap_core as _qcore
+    _RUST_AVAILABLE = True
+except ImportError:
+    _RUST_AVAILABLE = False
+
 
 @dataclass
 class DeliveryResult:
@@ -216,28 +223,24 @@ class QDAPProtocol:
         s, l = self._loss_obs.get(src_id, (0, 0))
         self._loss_obs[src_id] = (s + 1, l + (1 if lost else 0))
 
-    def _fec_factor(self, loss: float, is_emerg: bool) -> float:
-        """
-        Adaptive FEC redundancy factor k (number of encoded copies).
-        Mirrors AdaptiveFEC logic in the main QDAP source.
-        Emergency traffic gets more aggressive protection.
-        """
+    def _p_fail(self, per_base: float, loss: float, is_emerg: bool) -> float:
+        """Effective failure probability using Rust exact binomial or Python fallback."""
+        if _RUST_AVAILABLE:
+            max_oh = 4.0 if is_emerg else 2.0
+            _, k, r = _qcore.fec_select_profile(max(loss, 0.01), is_emerg, max_oh)
+            return _qcore.fec_effective_loss(per_base, k, r)
+        # Pure-Python fallback: repetition code approximation
         if is_emerg:
-            if loss < 0.05:
-                return 1.5
-            if loss < 0.15:
-                return 2.0
-            if loss < 0.30:
-                return 3.0
-            return 4.0
+            if loss < 0.05:   k = 1.5
+            elif loss < 0.15: k = 2.0
+            elif loss < 0.30: k = 3.0
+            else:             k = 4.0
         else:
-            if loss < 0.05:
-                return 1.1
-            if loss < 0.15:
-                return 1.5
-            if loss < 0.30:
-                return 2.0
-            return 2.5
+            if loss < 0.05:   k = 1.1
+            elif loss < 0.15: k = 1.5
+            elif loss < 0.30: k = 2.0
+            else:             k = 2.5
+        return per_base ** k
 
     # ── Main delivery method ──────────────────────────────────────────────
 
@@ -252,10 +255,9 @@ class QDAPProtocol:
 
         # Observed link loss for this source
         loss = self._observed_loss(msg.src_id)
-        k = self._fec_factor(loss, is_emerg)
 
-        # With k-fold FEC: P(all k coded copies lost) ≈ per_base^k
-        p_fail = per_base ** k
+        # Exact binomial via qdap_core Rust (or Python fallback)
+        p_fail = self._p_fail(per_base, loss, is_emerg)
 
         # Priority-aware scheduler — emergency jumps queue (no HOL blocking)
         if is_emerg:
