@@ -121,6 +121,13 @@ MQTT, commonly used in V2X research~\cite{Lyu2021}, routes messages through
 a broker with equal priority and suffers HOL blocking that drives emergency
 p99 latency to \SI{266}{\milli\second} at $N{=}100$.
 
+A subtler risk is that C-V2X's high delivery PDR (64--67\%) creates
+a false sense of reliability: the system \emph{does} deliver most DENMs,
+just not within the safety window.
+A V2X deployment engineer observing PDR metrics without checking deadline
+compliance would conclude that C-V2X outperforms DSRC for emergency
+messages — the opposite of the safety-relevant truth.
+
 % ── Contributions ────────────────────────────────────────────────────────────
 The main contributions of this work are:
 
@@ -675,6 +682,40 @@ but the structural problem persists.
 QDAP bypasses the issue entirely by transmitting immediately upon event
 detection, constrained only by channel access delay ($\ll \SI{1}{\milli\second}$
 at the tested densities).
+
+\subsection{Practical Safety Implications}
+
+The 50~ms DENM deadline is not an arbitrary specification: it corresponds to
+the minimum time for a human driver to initiate an avoidance response
+($\approx$\SI{200}{\milli\second} reaction time) minus the worst-case
+application processing and actuation latency
+($\approx$\SI{150}{\milli\second}).
+Failure to deliver within this window means the receiving vehicle's
+safety application cannot trigger countermeasures before the hazard is
+within unavoidable stopping distance.
+
+At \SI{130}{\kilo\metre\per\hour} (\SI{36.1}{\metre\per\second}), each
+\SI{10}{\milli\second} of additional latency translates to \SI{0.36}{\metre}
+of additional blind travel distance.
+A C-V2X DENM that misses the \SI{50}{\milli\second} deadline arrives, on
+average, at $\approx\SI{75}{\milli\second}$ (midpoint of the SPS tail
+$\sim\mathcal{U}[50, 100]$~ms), meaning the receiving vehicle travels an
+extra \SI{2.7}{\metre} before the hazard alert is processed — on a highway
+where the minimum safe stopping distance is \SI{73}{\metre}.
+More critically, \textbf{67.5\%} of DENMs miss the deadline under C-V2X at
+$N{=}75$: two in three emergency alerts arrive too late for compliant action.
+MQTT is worse still: its 240~ms p99 latency corresponds to \SI{8.7}{\metre}
+of blind travel at highway speed, exceeding the two-second following-distance
+gap at \SI{60}{\kilo\metre\per\hour}.
+
+QDAP's \SI{2.8}{\milli\second} emergency p99 — corresponding to
+\SI{10}{\centi\metre} of vehicle travel — is effectively instantaneous at
+all tested densities and speed profiles.
+Equally important is the \emph{invariance} property: QDAP's p99 does not
+degrade as vehicle density increases from $N{=}25$ to $N{=}100$, ensuring
+that safety guarantees hold in both sparse rural and dense urban deployments.
+This predictability is a prerequisite for safety certification under ISO~26262
+and similar automotive safety integrity standards.
 
 \subsection{Limitations}
 
