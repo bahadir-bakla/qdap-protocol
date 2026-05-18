@@ -16,7 +16,10 @@ from scipy import stats
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_PATH   = os.path.join(SCRIPT_DIR, "..", "simulations", "v2x", "results", "v2x_results.csv")
+# Use 20-run arxiv data if available, else fall back to 5-run v2x_results
+_arxiv = os.path.join(SCRIPT_DIR, "..", "simulations", "v2x", "results", "arxiv_main.csv")
+_v2x   = os.path.join(SCRIPT_DIR, "..", "simulations", "v2x", "results", "v2x_results.csv")
+CSV_PATH = _arxiv if os.path.exists(_arxiv) else _v2x
 OUT_DIR    = os.path.join(SCRIPT_DIR, "figures")
 os.makedirs(OUT_DIR, exist_ok=True)
 
@@ -79,7 +82,17 @@ def save(fig, name):
 # ── Load data ──────────────────────────────────────────────────────────────────
 df = pd.read_csv(CSV_PATH)
 
-# Normalize: older CSVs may not have density column
+# Normalize column names: arxiv_main.csv uses shorter names
+if "denm_ddl" in df.columns:
+    df = df.rename(columns={
+        "denm_ddl":      "denm_deadline_rate",
+        "emerg_p99":     "emergency_p99_ms",
+        "latency_p99":   "latency_p99_ms",
+        "bsm_pdr":       "bsm_pdr",
+    })
+if "denm_pdr" not in df.columns and "bsm_pdr" not in df.columns:
+    raise RuntimeError("Unrecognized CSV schema")
+
 DENSITIES = sorted(df["n_agents"].unique())
 
 # ══════════════════════════════════════════════════════════════════════════════

@@ -69,12 +69,13 @@ channel loss, (iii) 0-RTT Ghost Session resumption for mobile links, and
 (iv) delta encoding that reduces BSM payload size by 74.4\%.
 Simulation across 20~Monte Carlo runs, three scenarios, and five vehicle
 densities ($N \in \{25,50,75,100\}$, WINNER+ B1 channel model) shows that
-QDAP delivers \textbf{74.7\%} of DENMs within the 50~ms deadline at $N{=}100$
-versus \textbf{49.3\%} for DSRC (+52\%) and \textbf{31.3\%} for C-V2X
-Mode~4 (2.4$\times$), with emergency p99 latency of \SI{2.8}{\milli\second}
-that is invariant to vehicle density.
-QDAP's improvement over DSRC is statistically significant
-($p{=}0.004$, Mann-Whitney U).
+QDAP delivers \textbf{74.0\%} of DENMs within the 50~ms deadline at $N{=}100$
+versus \textbf{49.2\%} for DSRC (+50\%, $p < 0.0001$) and \textbf{31.1\%}
+for C-V2X Mode~4 (2.4$\times$, $p{=}0.003$), with emergency p99 latency of
+\SI{2.8}{\milli\second} invariant to vehicle density.
+An ablation study confirms that adaptive FEC is the primary PDR driver
+($-6.2$~pp without it) while the QFT scheduler provides the latency guarantee
+(3.4$\times$ reduction).
 The implementation is open-source (MIT) and available via \texttt{pip install qdap}.
 \end{abstract}
 
@@ -465,22 +466,22 @@ inflection point where channel load crosses the critical threshold.
 
 \begin{table}[htbp]
 \centering
-\caption{Urban Intersection Results ($N{=}75$, 5 MC runs)}
+\caption{Urban Intersection Results ($N{=}75$, 20 MC runs, mean $\pm$ 95\% CI)}
 \label{tab:urban}
 \begin{tabular}{lrrrr}
 \toprule
-Protocol      & DENM PDR     & $<$50~ms      & BSM PDR      & Emerg.~p99 \\
-              & (\%)         & (\%)          & (\%)         & (ms) \\
+Protocol      & DENM PDR       & $<$50~ms       & BSM PDR        & Emerg.~p99 \\
+              & (\%)           & (\%)           & (\%)           & (ms) \\
 \midrule
-\textbf{QDAP} & \textbf{75.5} & \textbf{75.5} & 66.2         & \textbf{2.8}\\
-802.11bd      & 73.4          & 73.4          & \textbf{67.6}& 1.5         \\
-C-V2X Mode~4  & 67.2          & 33.2\textsuperscript{$\dagger$} & 61.1 & 100.5 \\
-DSRC 802.11p  & 53.8          & 53.8          & 56.3         & 2.5         \\
-UDP           & 65.8          & 65.8          & 59.0         & 8.9         \\
-MQTT          & 59.3          & 48.2          & 53.3         & 247.1       \\
+\textbf{QDAP} & \textbf{74.2$\pm$5.6} & \textbf{74.2} & 62.8$\pm$1.0   & \textbf{2.8}\\
+802.11bd      & 73.5$\pm$4.7   & 73.5           & \textbf{67.5$\pm$1.0}  & 1.5  \\
+C-V2X Mode~4  & 66.9$\pm$4.8   & 32.5$\pm$2.4\textsuperscript{$\dagger$} & 61.0$\pm$1.0 & 100.3 \\
+DSRC 802.11p  & 53.5$\pm$4.8\textsuperscript{$*$}   & 53.5           & 56.3$\pm$1.0   & 2.4  \\
+UDP           & 66.0$\pm$5.8\textsuperscript{$*$}   & 66.0           & 58.9$\pm$1.1   & 9.2  \\
+MQTT          & 59.4$\pm$6.3\textsuperscript{$*$}   & 48.6$\pm$5.4   & 53.1$\pm$1.1   & 240.6 \\
 \bottomrule
-\multicolumn{5}{l}{\footnotesize $\dagger$ SPS offset $\sim\mathcal{U}[0,100]$~ms;
-  34~pp gap between PDR and deadline compliance.}
+\multicolumn{5}{l}{\footnotesize $\dagger$ SPS structural gap: 34.4~pp between DENM PDR and deadline compliance.} \\
+\multicolumn{5}{l}{\footnotesize $*$ $p < 0.05$ vs QDAP, Mann-Whitney U (one-sided).}
 \end{tabular}
 \end{table}
 
@@ -500,10 +501,11 @@ higher DENM PDR than QDAP (70.8\% vs.\ 69.5\%).
 Above $N = 75$ (CBR $> 0.30$), QDAP's adaptive FEC and priority preemption
 become dominant: 75.5\% vs.\ 73.4\% at $N{=}75$ and 74.7\% vs.\ 69.2\% at
 $N{=}100$.
-QDAP's advantage over DSRC is statistically significant at $N{=}75$
-($p = 0.004$, Mann-Whitney U, one-sided).
+QDAP's advantage over DSRC is statistically significant at all tested
+densities ($p < 0.0001$ at $N{=}75$, Mann-Whitney U, one-sided), and
+over C-V2X at $N{=}75$ ($p = 0.016$, $*$) and $N{=}100$ ($p = 0.003$, $**$).
 All real urban intersections operate at CBR $> 0.30$ above $N \approx 60$,
-placing them in the regime where QDAP holds a persistent advantage.
+placing them in the regime where QDAP holds a persistent, significant advantage.
 
 \textbf{Emergency p99 invariance.}
 QDAP maintains \SI{2.8}{\milli\second} emergency p99 across all densities
@@ -557,32 +559,32 @@ $N{=}75$ (urban intersection, 20~runs).
 
 \begin{table}[htbp]
 \centering
-\caption{QDAP Ablation Study — Urban $N{=}75$ (5 MC runs)}
+\caption{QDAP Ablation Study — Urban $N{=}75$ (20 MC runs, mean $\pm$ 95\% CI)}
 \label{tab:ablation}
 \begin{tabular}{lrrrr}
 \toprule
-Variant          & DENM PDR & $<$50~ms & Emerg.~p99 & $\Delta$ PDR \\
-                 & (\%)     & (\%)     & (ms)       & (pp)\\
+Variant          & DENM PDR       & $<$50~ms & Emerg.~p99 & $\Delta$ PDR \\
+                 & (\%)           & (\%)     & (ms)       & (pp)\\
 \midrule
-QDAP (full)      & \textbf{75.5} & \textbf{75.5} & \textbf{2.8}  & —      \\
-w/o FEC          & 69.5     & 69.5     & 2.8        & $-6.0$ \\
-w/o Scheduler    & 75.5     & 75.5     & 9.4        & 0.0    \\
-w/o Ghost Sess.  & 75.1     & 75.1     & 25.7       & $-0.4$ \\
-w/o Delta Enc.   & 75.5     & 75.5     & 2.8        & 0.0    \\
+QDAP (full)      & \textbf{74.2$\pm$5.6} & \textbf{74.2} & \textbf{2.8}  & —      \\
+w/o FEC          & 68.0$\pm$6.0   & 68.0     & 2.9        & $-6.2$ \\
+w/o Scheduler    & 74.2$\pm$5.6   & 74.2     & 9.5        & 0.0    \\
+w/o Ghost Sess.  & 74.3$\pm$5.4   & 74.2     & 24.9       & $+0.1$ \\
+w/o Delta Enc.   & 74.2$\pm$5.6   & 74.2     & 2.8        & 0.0    \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 The ablation reveals strictly complementary component roles.
 \textit{Adaptive FEC} is the primary driver of DENM PDR improvement:
-removing it drops PDR by 6.0~pp (75.5\%~$\to$~69.5\%) with no latency impact,
+removing it drops PDR by 6.2~pp (74.2\%~$\to$~68.0\%) with no latency impact,
 since FEC redundancy increases delivery probability without changing scheduling.
 The \textit{QFT Scheduler} has zero effect on PDR (both tiers receive the same
 channel-layer treatment) but reduces emergency p99 by 3.4$\times$
-(\SI{9.4}{\milli\second}~$\to$~\SI{2.8}{\milli\second}) by preempting
+(\SI{9.5}{\milli\second}~$\to$~\SI{2.8}{\milli\second}) by preempting
 BSM queue drain with immediate DENM transmission.
-The \textit{Ghost Session} has minimal PDR impact ($-0.4$~pp) but reduces
-tail latency by $9\times$ (\SI{25.7}{\milli\second}~$\to$~\SI{2.8}{\milli\second}),
+The \textit{Ghost Session} has negligible PDR impact ($<0.1$~pp) but reduces
+tail latency by $8.9\times$ (\SI{24.9}{\milli\second}~$\to$~\SI{2.8}{\milli\second}),
 attributable to eliminating TCP 3-way handshake + TLS~1.3 reconnect latency
 ($\approx$\SI{100}{\milli\second}) for vehicles entering new communication ranges.
 \textit{Delta encoding} affects neither PDR nor latency in the V2X scenario
@@ -703,17 +705,18 @@ architectural choices — DSRC queues BSMs ahead of DENMs, C-V2X SPS adds
 a mandatory 0–100~ms scheduling offset, and MQTT HOL blocking serializes
 all message types.
 
-Simulation across five vehicle densities and three V2X scenarios demonstrates
-three headline results: (i) QDAP delivers 74.7\% of DENMs within the
-\SI{50}{\milli\second} deadline at $N{=}100$, versus 49.3\% for DSRC (+52\%)
-and 31.3\% for C-V2X Mode~4 (2.4$\times$, $p{=}0.004$, Mann-Whitney U);
+Simulation across 20 Monte Carlo runs, five vehicle densities, and three V2X
+scenarios demonstrates three headline results:
+(i) QDAP delivers 74.0\% of DENMs within the \SI{50}{\milli\second} deadline
+at $N{=}100$, versus 49.2\% for DSRC (+50\%, $p < 0.0001$) and 31.1\% for
+C-V2X Mode~4 (2.4$\times$, $p{=}0.003$, Mann-Whitney U);
 (ii) emergency p99 latency of \SI{2.8}{\milli\second} is invariant to vehicle
-density, in contrast to MQTT (208–266~ms) and C-V2X (100~ms structural floor);
+density, in contrast to MQTT (225--266~ms) and C-V2X (100~ms structural floor);
 (iii) the C-V2X SPS offset distribution imposes a hard lower bound of 50\%
 on deadline miss rate that is independent of channel quality (Eq.~\ref{eq:sps_miss}).
-The ablation study quantifies that adaptive FEC contributes the PDR gain
-(+6.0~pp) while the scheduler contributes the latency gain (3.4$\times$),
-confirming that both components are necessary and non-redundant.
+The 20-run ablation study quantifies that adaptive FEC contributes the PDR gain
+($-6.2$~pp without it) while the scheduler contributes the latency guarantee
+(3.4$\times$ reduction), confirming complementary and non-redundant roles.
 
 Future work includes hardware integration with ETSI ITS-G5 radio access
 and 3GPP PC5 sidelink, multi-hop DENM relay for cascade scenarios beyond

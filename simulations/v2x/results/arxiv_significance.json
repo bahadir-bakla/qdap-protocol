@@ -1,0 +1,632 @@
+{
+  "urban": {
+    "25": {
+      "802.11bd": {
+        "qdap_mean": 75.27,
+        "qdap_ci": 4.98,
+        "comp_mean": 78.22,
+        "comp_ci": 4.5,
+        "U": 168.5,
+        "p": 0.80666,
+        "sig": "ns",
+        "delta_pp": -2.95
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 75.27,
+        "qdap_ci": 4.98,
+        "comp_mean": 58.37,
+        "comp_ci": 4.76,
+        "U": 346.0,
+        "p": 4e-05,
+        "sig": "***",
+        "delta_pp": 16.9
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 75.27,
+        "qdap_ci": 4.98,
+        "comp_mean": 72.08,
+        "comp_ci": 4.63,
+        "U": 256.0,
+        "p": 0.06664,
+        "sig": "ns",
+        "delta_pp": 3.19
+      },
+      "UDP": {
+        "qdap_mean": 75.27,
+        "qdap_ci": 4.98,
+        "comp_mean": 67.17,
+        "comp_ci": 5.38,
+        "U": 288.0,
+        "p": 0.00897,
+        "sig": "**",
+        "delta_pp": 8.1
+      },
+      "MQTT": {
+        "qdap_mean": 75.27,
+        "qdap_ci": 4.98,
+        "comp_mean": 60.19,
+        "comp_ci": 5.44,
+        "U": 329.0,
+        "p": 0.00025,
+        "sig": "***",
+        "delta_pp": 15.09
+      }
+    },
+    "50": {
+      "802.11bd": {
+        "qdap_mean": 74.46,
+        "qdap_ci": 5.32,
+        "comp_mean": 76.38,
+        "comp_ci": 4.75,
+        "U": 177.0,
+        "p": 0.73751,
+        "sig": "ns",
+        "delta_pp": -1.91
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 74.46,
+        "qdap_ci": 5.32,
+        "comp_mean": 56.07,
+        "comp_ci": 4.69,
+        "U": 354.0,
+        "p": 2e-05,
+        "sig": "***",
+        "delta_pp": 18.39
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 74.46,
+        "qdap_ci": 5.32,
+        "comp_mean": 69.59,
+        "comp_ci": 4.9,
+        "U": 260.0,
+        "p": 0.05376,
+        "sig": "ns",
+        "delta_pp": 4.88
+      },
+      "UDP": {
+        "qdap_mean": 74.46,
+        "qdap_ci": 5.32,
+        "comp_mean": 66.44,
+        "comp_ci": 5.77,
+        "U": 273.0,
+        "p": 0.02493,
+        "sig": "*",
+        "delta_pp": 8.03
+      },
+      "MQTT": {
+        "qdap_mean": 74.46,
+        "qdap_ci": 5.32,
+        "comp_mean": 59.81,
+        "comp_ci": 5.99,
+        "U": 325.0,
+        "p": 0.00038,
+        "sig": "***",
+        "delta_pp": 14.66
+      }
+    },
+    "75": {
+      "802.11bd": {
+        "qdap_mean": 74.17,
+        "qdap_ci": 5.56,
+        "comp_mean": 73.45,
+        "comp_ci": 4.67,
+        "U": 209.0,
+        "p": 0.40907,
+        "sig": "ns",
+        "delta_pp": 0.71
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 74.17,
+        "qdap_ci": 5.56,
+        "comp_mean": 53.49,
+        "comp_ci": 4.8,
+        "U": 365.5,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 20.68
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 74.17,
+        "qdap_ci": 5.56,
+        "comp_mean": 66.86,
+        "comp_ci": 4.84,
+        "U": 280.0,
+        "p": 0.01576,
+        "sig": "*",
+        "delta_pp": 7.31
+      },
+      "UDP": {
+        "qdap_mean": 74.17,
+        "qdap_ci": 5.56,
+        "comp_mean": 66.04,
+        "comp_ci": 5.84,
+        "U": 275.0,
+        "p": 0.02194,
+        "sig": "*",
+        "delta_pp": 8.13
+      },
+      "MQTT": {
+        "qdap_mean": 74.17,
+        "qdap_ci": 5.56,
+        "comp_mean": 59.4,
+        "comp_ci": 6.25,
+        "U": 321.0,
+        "p": 0.00056,
+        "sig": "***",
+        "delta_pp": 14.77
+      }
+    },
+    "100": {
+      "802.11bd": {
+        "qdap_mean": 73.96,
+        "qdap_ci": 5.22,
+        "comp_mean": 69.46,
+        "comp_ci": 4.69,
+        "U": 253.0,
+        "p": 0.07778,
+        "sig": "ns",
+        "delta_pp": 4.5
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 73.96,
+        "qdap_ci": 5.22,
+        "comp_mean": 49.16,
+        "comp_ci": 4.1,
+        "U": 385.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 24.79
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 73.96,
+        "qdap_ci": 5.22,
+        "comp_mean": 64.18,
+        "comp_ci": 4.47,
+        "U": 303.0,
+        "p": 0.00278,
+        "sig": "**",
+        "delta_pp": 9.78
+      },
+      "UDP": {
+        "qdap_mean": 73.96,
+        "qdap_ci": 5.22,
+        "comp_mean": 65.26,
+        "comp_ci": 5.72,
+        "U": 284.0,
+        "p": 0.01195,
+        "sig": "*",
+        "delta_pp": 8.7
+      },
+      "MQTT": {
+        "qdap_mean": 73.96,
+        "qdap_ci": 5.22,
+        "comp_mean": 58.62,
+        "comp_ci": 6.02,
+        "U": 325.0,
+        "p": 0.00038,
+        "sig": "***",
+        "delta_pp": 15.33
+      }
+    }
+  },
+  "highway": {
+    "25": {
+      "802.11bd": {
+        "qdap_mean": 44.82,
+        "qdap_ci": 1.04,
+        "comp_mean": 47.22,
+        "comp_ci": 1.29,
+        "U": 102.0,
+        "p": 0.99615,
+        "sig": "ns",
+        "delta_pp": -2.41
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 44.82,
+        "qdap_ci": 1.04,
+        "comp_mean": 34.25,
+        "comp_ci": 1.1,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 10.57
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 44.82,
+        "qdap_ci": 1.04,
+        "comp_mean": 44.5,
+        "comp_ci": 1.16,
+        "U": 211.5,
+        "p": 0.38301,
+        "sig": "ns",
+        "delta_pp": 0.31
+      },
+      "UDP": {
+        "qdap_mean": 44.82,
+        "qdap_ci": 1.04,
+        "comp_mean": 39.82,
+        "comp_ci": 1.31,
+        "U": 372.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 5.0
+      },
+      "MQTT": {
+        "qdap_mean": 44.82,
+        "qdap_ci": 1.04,
+        "comp_mean": 35.29,
+        "comp_ci": 1.05,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 9.53
+      }
+    },
+    "50": {
+      "802.11bd": {
+        "qdap_mean": 42.65,
+        "qdap_ci": 1.07,
+        "comp_mean": 44.45,
+        "comp_ci": 1.13,
+        "U": 118.0,
+        "p": 0.98718,
+        "sig": "ns",
+        "delta_pp": -1.79
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 42.65,
+        "qdap_ci": 1.07,
+        "comp_mean": 32.56,
+        "comp_ci": 0.91,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 10.09
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 42.65,
+        "qdap_ci": 1.07,
+        "comp_mean": 41.03,
+        "comp_ci": 1.09,
+        "U": 266.0,
+        "p": 0.03822,
+        "sig": "*",
+        "delta_pp": 1.62
+      },
+      "UDP": {
+        "qdap_mean": 42.65,
+        "qdap_ci": 1.07,
+        "comp_mean": 37.99,
+        "comp_ci": 1.04,
+        "U": 369.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 4.66
+      },
+      "MQTT": {
+        "qdap_mean": 42.65,
+        "qdap_ci": 1.07,
+        "comp_mean": 34.26,
+        "comp_ci": 1.02,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 8.39
+      }
+    },
+    "75": {
+      "802.11bd": {
+        "qdap_mean": 44.74,
+        "qdap_ci": 0.93,
+        "comp_mean": 46.19,
+        "comp_ci": 0.84,
+        "U": 112.0,
+        "p": 0.99167,
+        "sig": "ns",
+        "delta_pp": -1.45
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 44.74,
+        "qdap_ci": 0.93,
+        "comp_mean": 34.34,
+        "comp_ci": 0.75,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 10.4
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 44.74,
+        "qdap_ci": 0.93,
+        "comp_mean": 42.2,
+        "comp_ci": 0.74,
+        "U": 342.0,
+        "p": 6e-05,
+        "sig": "***",
+        "delta_pp": 2.54
+      },
+      "UDP": {
+        "qdap_mean": 44.74,
+        "qdap_ci": 0.93,
+        "comp_mean": 40.25,
+        "comp_ci": 0.83,
+        "U": 382.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 4.49
+      },
+      "MQTT": {
+        "qdap_mean": 44.74,
+        "qdap_ci": 0.93,
+        "comp_mean": 36.65,
+        "comp_ci": 0.67,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 8.08
+      }
+    },
+    "100": {
+      "802.11bd": {
+        "qdap_mean": 43.98,
+        "qdap_ci": 0.7,
+        "comp_mean": 44.35,
+        "comp_ci": 0.58,
+        "U": 168.0,
+        "p": 0.81038,
+        "sig": "ns",
+        "delta_pp": -0.38
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 43.98,
+        "qdap_ci": 0.7,
+        "comp_mean": 32.64,
+        "comp_ci": 0.64,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 11.34
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 43.98,
+        "qdap_ci": 0.7,
+        "comp_mean": 40.35,
+        "comp_ci": 0.74,
+        "U": 377.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 3.63
+      },
+      "UDP": {
+        "qdap_mean": 43.98,
+        "qdap_ci": 0.7,
+        "comp_mean": 39.28,
+        "comp_ci": 0.67,
+        "U": 394.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 4.7
+      },
+      "MQTT": {
+        "qdap_mean": 43.98,
+        "qdap_ci": 0.7,
+        "comp_mean": 35.49,
+        "comp_ci": 0.68,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 8.49
+      }
+    }
+  },
+  "cascade": {
+    "25": {
+      "802.11bd": {
+        "qdap_mean": 47.9,
+        "qdap_ci": 1.08,
+        "comp_mean": 50.02,
+        "comp_ci": 0.98,
+        "U": 67.0,
+        "p": 0.99985,
+        "sig": "ns",
+        "delta_pp": -2.11
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 47.9,
+        "qdap_ci": 1.08,
+        "comp_mean": 38.3,
+        "comp_ci": 0.87,
+        "U": 399.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 9.61
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 47.9,
+        "qdap_ci": 1.08,
+        "comp_mean": 47.18,
+        "comp_ci": 1.08,
+        "U": 240.0,
+        "p": 0.14265,
+        "sig": "ns",
+        "delta_pp": 0.73
+      },
+      "UDP": {
+        "qdap_mean": 47.9,
+        "qdap_ci": 1.08,
+        "comp_mean": 44.28,
+        "comp_ci": 1.06,
+        "U": 364.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 3.63
+      },
+      "MQTT": {
+        "qdap_mean": 47.9,
+        "qdap_ci": 1.08,
+        "comp_mean": 41.13,
+        "comp_ci": 1.01,
+        "U": 388.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 6.78
+      }
+    },
+    "50": {
+      "802.11bd": {
+        "qdap_mean": 49.33,
+        "qdap_ci": 0.69,
+        "comp_mean": 51.01,
+        "comp_ci": 0.7,
+        "U": 58.0,
+        "p": 0.99994,
+        "sig": "ns",
+        "delta_pp": -1.67
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 49.33,
+        "qdap_ci": 0.69,
+        "comp_mean": 39.16,
+        "comp_ci": 0.62,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 10.17
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 49.33,
+        "qdap_ci": 0.69,
+        "comp_mean": 48.13,
+        "comp_ci": 0.68,
+        "U": 313.0,
+        "p": 0.00117,
+        "sig": "**",
+        "delta_pp": 1.2
+      },
+      "UDP": {
+        "qdap_mean": 49.33,
+        "qdap_ci": 0.69,
+        "comp_mean": 45.52,
+        "comp_ci": 0.68,
+        "U": 383.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 3.82
+      },
+      "MQTT": {
+        "qdap_mean": 49.33,
+        "qdap_ci": 0.69,
+        "comp_mean": 42.61,
+        "comp_ci": 0.71,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 6.73
+      }
+    },
+    "75": {
+      "802.11bd": {
+        "qdap_mean": 44.41,
+        "qdap_ci": 1.09,
+        "comp_mean": 46.4,
+        "comp_ci": 1.08,
+        "U": 103.0,
+        "p": 0.99582,
+        "sig": "ns",
+        "delta_pp": -1.99
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 44.41,
+        "qdap_ci": 1.09,
+        "comp_mean": 34.87,
+        "comp_ci": 0.87,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 9.54
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 44.41,
+        "qdap_ci": 1.09,
+        "comp_mean": 42.95,
+        "comp_ci": 1.08,
+        "U": 273.0,
+        "p": 0.02493,
+        "sig": "*",
+        "delta_pp": 1.46
+      },
+      "UDP": {
+        "qdap_mean": 44.41,
+        "qdap_ci": 1.09,
+        "comp_mean": 40.51,
+        "comp_ci": 1.01,
+        "U": 354.0,
+        "p": 2e-05,
+        "sig": "***",
+        "delta_pp": 3.9
+      },
+      "MQTT": {
+        "qdap_mean": 44.41,
+        "qdap_ci": 1.09,
+        "comp_mean": 37.36,
+        "comp_ci": 1.05,
+        "U": 392.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 7.05
+      }
+    },
+    "100": {
+      "802.11bd": {
+        "qdap_mean": 46.06,
+        "qdap_ci": 1.09,
+        "comp_mean": 47.21,
+        "comp_ci": 0.99,
+        "U": 117.0,
+        "p": 0.98805,
+        "sig": "ns",
+        "delta_pp": -1.15
+      },
+      "DSRC 802.11p": {
+        "qdap_mean": 46.06,
+        "qdap_ci": 1.09,
+        "comp_mean": 35.72,
+        "comp_ci": 0.86,
+        "U": 400.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 10.34
+      },
+      "C-V2X Mode 4": {
+        "qdap_mean": 46.06,
+        "qdap_ci": 1.09,
+        "comp_mean": 43.79,
+        "comp_ci": 0.93,
+        "U": 350.0,
+        "p": 3e-05,
+        "sig": "***",
+        "delta_pp": 2.27
+      },
+      "UDP": {
+        "qdap_mean": 46.06,
+        "qdap_ci": 1.09,
+        "comp_mean": 42.06,
+        "comp_ci": 0.99,
+        "U": 364.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 4.0
+      },
+      "MQTT": {
+        "qdap_mean": 46.06,
+        "qdap_ci": 1.09,
+        "comp_mean": 39.05,
+        "comp_ci": 0.9,
+        "U": 390.0,
+        "p": 0.0,
+        "sig": "***",
+        "delta_pp": 7.01
+      }
+    }
+  }
+}
