@@ -76,7 +76,11 @@ for C-V2X Mode~4 (2.4$\times$, $p{=}0.003$), with emergency p99 latency of
 An ablation study confirms that adaptive FEC is the primary PDR driver
 ($-6.2$~pp without it) while the QFT scheduler provides the latency guarantee
 (3.4$\times$ reduction).
-The implementation is open-source (MIT) and available via \texttt{pip install qdap}.
+The implementation ships with a Rust-accelerated core (\texttt{qdap\_core},
+PyO3/maturin, $\geq$2.6~M FEC decisions/s) and a pure-Python fallback for
+ECUs without a Rust toolchain; both paths are verified against identical test
+vectors.
+The stack is open-source (MIT) and available via \texttt{pip install qdap}.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -132,10 +136,14 @@ messages — the opposite of the safety-relevant truth.
 The main contributions of this work are:
 
 \begin{enumerate}
-  \item \textbf{QDAP protocol design}: A pure-Python, Rust-accelerated
-        application-layer protocol with four tightly integrated components:
-        a QFT-inspired scheduler, adaptive FEC, 0-RTT Ghost Session, and
-        delta encoder.  The protocol runs over existing TCP/UDP infrastructure
+  \item \textbf{QDAP protocol design}: A dual-backend application-layer
+        protocol with four tightly integrated components: a QFT-inspired
+        scheduler, adaptive FEC, 0-RTT Ghost Session, and delta encoder.
+        A Rust core (\texttt{qdap\_core}, PyO3) provides $\geq$2.6~M FEC
+        decisions/s for embedded ECUs; a pure-Python fallback ensures
+        compatibility without a Rust toolchain.
+        Both paths are verified against identical test vectors.
+        The protocol runs over existing TCP/UDP infrastructure
         with no hardware changes.
 
   \item \textbf{Standards-compliant V2X message layer}: Implementation of
@@ -152,6 +160,12 @@ The main contributions of this work are:
         contribution showing that adaptive FEC drives +6~pp DENM PDR, the
         QFT scheduler reduces emergency p99 by 3.4$\times$, and Ghost Session
         reduces tail latency by 9$\times$.
+
+  \item \textbf{Drop-in MAC adapters}: Bridge layer implementations for
+        QDAP over DSRC (EDCA MAC) and QDAP over C-V2X (SPS + aperiodic
+        emergency TX), showing $+21$~pp gain over bare DSRC and $+47$~pp
+        over bare C-V2X deadline compliance — without changing any radio
+        hardware or MAC parameters.
 
   \item \textbf{Real-world WAN validation}: AWS Ireland–Singapore benchmark
         at 30\% injected packet loss demonstrates 99.0\% emergency delivery
@@ -653,6 +667,65 @@ best-competing protocol across all scenario$\times$density combinations.
            Gains are largest at high density in urban and cascade scenarios.}
   \label{fig:pdr_gain}
 \end{figure}
+
+\subsection{QDAP as a Drop-In Application Layer}
+\label{sec:dropin}
+
+The comparisons above treat each protocol as a complete, independent stack.
+A practitioner question is different: \textit{given existing V2X radio hardware,
+what does adding QDAP's application layer contribute?}
+To answer this, we evaluate two combined stacks:
+\textbf{QDAP+DSRC} (QDAP application layer over IEEE~802.11p EDCA MAC) and
+\textbf{QDAP+C-V2X} (QDAP application layer over C-V2X Mode~4 sidelink with
+aperiodic one-shot TX for emergency messages, as permitted by
+3GPP~TS~36.321~\S{}5.8.1~\cite{3GPP_TS_36213}).
+
+Table~\ref{tab:dropin} shows results at $N{=}75$ (urban intersection).
+
+\begin{table}[htbp]
+\centering
+\caption{QDAP Drop-In Gain Over Bare MAC ($N{=}75$, 5 MC runs)}
+\label{tab:dropin}
+\begin{tabular}{lrrrl}
+\toprule
+Stack              & DENM PDR & $<$50~ms & Emerg.~p99 & Gain \\
+                   & (\%)     & (\%)     & (ms)       & (pp) \\
+\midrule
+QDAP (standalone)  & 74.2     & 74.2     & 2.9        & ref  \\
+\midrule
+DSRC 802.11p       & 53.8     & 53.8     & 2.5        & —    \\
+\textbf{QDAP+DSRC} & \textbf{75.1} & \textbf{75.1} & \textbf{1.4} & \textbf{+21.3}\\
+\midrule
+C-V2X Mode~4       & 67.2     & 33.2\textsuperscript{$\dagger$} & 100.5 & — \\
+\textbf{QDAP+C-V2X}& \textbf{80.6} & \textbf{80.6} & \textbf{5.8} & \textbf{+47.4}\\
+\bottomrule
+\multicolumn{5}{l}{\footnotesize $\dagger$ Structural SPS floor.
+  Gain computed vs.\ bare MAC $<$50~ms column.}
+\end{tabular}
+\end{table}
+
+\textbf{QDAP+DSRC} raises DENM deadline compliance from 53.8\% to 75.1\%
+(+21.3~pp) by adding adaptive FEC that compensates for broadcast collisions
+and priority scheduling that maps emergency messages to AC\_VO
+(CW$_{\min}$=3), reducing effective collision exposure to $0.20\times$.
+
+\textbf{QDAP+C-V2X} achieves the highest deadline compliance of any tested
+stack (80.6\%).
+For BSMs, standard SPS scheduling is retained.
+For DENMs, QDAP triggers aperiodic one-shot transmission (3GPP~TS~36.321
+\S{}5.8.1), bypassing the SPS resource pre-allocation window entirely.
+This removes the structural $P(\text{miss}) = 0.5$ floor while FEC
+compensates for the random collision exposure of aperiodic access.
+The net result is +47.4~pp over bare C-V2X deadline compliance.
+
+The implementation is unified: both adapters use the same
+\texttt{qdap\_core} Rust library for FEC profile selection
+(2.6~M decisions/s) and the same Python API.
+A deployment engineer switches from DSRC to C-V2X by changing one
+constructor argument; the application code and message formats
+(SAE~J2735 BSM, ETSI~EN~302~637 DENM) remain identical.
+The pure-Python fallback ensures compatibility on embedded ECUs
+without Rust toolchain support.
 
 % ─────────────────────────────────────────────────────────────────────────────
 % VII. Discussion
