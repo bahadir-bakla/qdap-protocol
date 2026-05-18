@@ -415,14 +415,35 @@ a DENM chain.
 
 \subsection{Protocol Implementations}
 
-Each protocol model is validated against published curves and specifications:
-DSRC uses the empirical broadcast collision model~\cite{Sepulcre2011};
+Each protocol model is validated against published curves and specifications.
+DSRC uses the empirical broadcast collision model ($p_{\text{col}} = \min(\mathrm{CBR}^2
+\times 0.6,\; 0.55)$)~\cite{Sepulcre2011}, applied on top of the link-layer PER.
 C-V2X SPS delay is modeled as $\mathcal{U}[0, 100]$~ms per
-3GPP~TS~36.213~\cite{3GPP_TS_36213};
-MQTT includes broker round-trip, TCP retransmit timeout (\SI{200}{\milli\second}),
+3GPP~TS~36.213~\cite{3GPP_TS_36213}.
+UDP is included as a transport-layer baseline without reliability mechanisms.
+MQTT is included as a \emph{V2I broker-mediated} baseline — representative of
+infrastructure-relayed safety alert pipelines proposed in the
+literature~\cite{Lyu2021} — and is not a direct V2V protocol; its model
+includes local RSU broker round-trip, TCP retransmit timeout (\SI{200}{\milli\second}),
 and HOL blocking proportional to load.
-QDAP uses the \texttt{qdap\_core} Rust library for FEC profile selection
-and exact binomial failure probability (Eq.~\ref{eq:fec}).
+
+QDAP is modeled as an application-layer protocol operating over the same
+physical channel as DSRC (same SNR $\to$ PER mapping).
+MAC-layer collision probability is applied using the same broadcast model,
+with a priority-access reduction factor derived from the IEEE~802.11e EDCA
+AC\_VO / AC\_BE contention window ratio ($\approx\!0.25\times$ for emergency,
+$0.6\times$ for VRU, $1.0\times$ for normal traffic).
+The effective per-packet loss rate combines channel PER and collision:
+$\tilde{p} = 1 - (1-p_{\text{ch}})(1-p_{\text{col}})$, and FEC operates
+on $\tilde{p}$ (Eq.~\ref{eq:fec}).
+FEC profile selection and exact binomial failure probability use the
+\texttt{qdap\_core} Rust library.
+A sensitivity study confirmed that emergency DENM PDR is invariant to the
+collision model ($\pm 0.1$~pp) because the emergency FEC profile
+($k{=}1, r{=}2$) absorbs the added loss: at CBR~$=\!0.36$,
+$p_{\text{col,emerg}} = 1.95\%$, increasing $\tilde{p}$ by $<\!2$~pp,
+which the three-redundancy code handles with $<\!0.01\%$ marginal failure
+probability.
 
 \subsection{Metrics and Statistical Methodology}
 
@@ -722,12 +743,17 @@ and similar automotive safety integrity standards.
 QDAP's V2X evaluation is simulation-based; real OBU/RSU hardware
 integration represents the primary avenue for future validation.
 The current implementation uses TCP/UDP transport; integration with
-ETSI ITS-G5 or 3GPP PC5 radio access is future work.
+ETSI ITS-G5 or 3GPP PC5 radio access is future work, and the present
+simulation assumes QDAP operates over the same channel as DSRC with a
+priority-aware collision reduction model.
 Multi-hop DENM relay (cascade propagation beyond one hop) is not yet
 implemented.
-The LOS approximation uses a \SI{350}{\metre} distance threshold rather
-than a full ray-cast, which may overestimate LOS probability at
+The LOS/NLOS classification uses a \SI{350}{\metre} distance threshold
+rather than a full ray-cast, which may overestimate LOS probability at
 $N > 50$ with dense building occlusion.
+MQTT is evaluated as a V2I broker-mediated protocol; its poor V2V deadline
+performance reflects the inherent latency of two-hop (vehicle $\to$ broker
+$\to$ vehicle) delivery and is not indicative of direct-link protocols.
 
 % ─────────────────────────────────────────────────────────────────────────────
 % VIII. Conclusion

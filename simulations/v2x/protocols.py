@@ -253,11 +253,23 @@ class QDAPProtocol:
         )
         is_vru = msg.priority == Priority.HIGH
 
-        # Observed link loss for this source
+        # MAC-layer collision: same medium as DSRC (p_col = CBR² × 0.6).
+        # Priority scheduling gives emergency traffic a shorter effective
+        # contention window (~AC_VO, CW_min=3 vs AC_BE CW_min=15) →
+        # ~0.25× collision probability. VRU traffic gets 0.6×.
+        p_col_base = min(cbr ** 2 * 0.6, 0.55)
+        col_factor = 0.25 if is_emerg else (0.6 if is_vru else 1.0)
+        p_col = p_col_base * col_factor
+
+        # Combine channel PER + collision into effective per-packet loss rate.
+        # FEC operates on this combined loss (covers both error types).
+        per_eff = 1.0 - (1.0 - per_base) * (1.0 - p_col)
+
+        # Observed link loss for adaptive FEC profile selection
         loss = self._observed_loss(msg.src_id)
 
         # Exact binomial via qdap_core Rust (or Python fallback)
-        p_fail = self._p_fail(per_base, loss, is_emerg)
+        p_fail = self._p_fail(per_eff, loss, is_emerg)
 
         # Priority-aware scheduler — emergency jumps queue (no HOL blocking)
         if is_emerg:
