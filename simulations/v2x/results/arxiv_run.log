@@ -1,0 +1,248 @@
+
+============================================================
+  QDAP ArXiv Statistical Pipeline
+  Runs     : 20 per combination
+  Scenarios: ['urban', 'highway', 'cascade']
+  Densities: [25, 50, 75, 100]
+  Quick    : False
+============================================================
+
+>>> Faz 1.1-1.3 — Main protocols (20 runs)
+  [main] [  20/1440] urban    N= 25 QDAP               |    20s  ETA  1423s
+  [main] [  40/1440] urban    N= 25 DSRC 802.11p       |    42s  ETA  1478s
+  [main] [  60/1440] urban    N= 25 802.11bd           |    65s  ETA  1487s
+  [main] [  80/1440] urban    N= 25 C-V2X Mode 4       |    84s  ETA  1428s
+  [main] [ 100/1440] urban    N= 25 UDP                |   101s  ETA  1353s
+  [main] [ 120/1440] urban    N= 25 MQTT               |   119s  ETA  1310s
+  [main] [ 140/1440] urban    N= 50 QDAP               |   197s  ETA  1830s
+  [main] [ 160/1440] urban    N= 50 DSRC 802.11p       |   284s  ETA  2269s
+  [main] [ 180/1440] urban    N= 50 802.11bd           |   371s  ETA  2595s
+  [main] [ 200/1440] urban    N= 50 C-V2X Mode 4       |   445s  ETA  2759s
+  [main] [ 220/1440] urban    N= 50 UDP                |   510s  ETA  2828s
+  [main] [ 240/1440] urban    N= 50 MQTT               |   580s  ETA  2901s
+  [main] [ 260/1440] urban    N= 75 QDAP               |   746s  ETA  3385s
+  [main] [ 280/1440] urban    N= 75 DSRC 802.11p       |   930s  ETA  3852s
+  [main] [ 300/1440] urban    N= 75 802.11bd           |  1116s  ETA  4241s
+  [main] [ 320/1440] urban    N= 75 C-V2X Mode 4       |  1275s  ETA  4461s
+  [main] [ 340/1440] urban    N= 75 UDP                |  1414s  ETA  4574s
+  [main] [ 360/1440] urban    N= 75 MQTT               |  1565s  ETA  4695s
+  [main] [ 380/1440] urban    N=100 QDAP               |  1878s  ETA  5239s
+  [main] [ 400/1440] urban    N=100 DSRC 802.11p       |  2219s  ETA  5769s
+  [main] [ 420/1440] urban    N=100 802.11bd           |  2566s  ETA  6231s
+  [main] [ 440/1440] urban    N=100 C-V2X Mode 4       |  2862s  ETA  6504s
+  [main] [ 460/1440] urban    N=100 UDP                |  3125s  ETA  6658s
+  [main] [ 480/1440] urban    N=100 MQTT               |  3412s  ETA  6825s
+  [main] [ 500/1440] highway  N= 25 QDAP               |  3424s  ETA  6437s
+  [main] [ 520/1440] highway  N= 25 DSRC 802.11p       |  3436s  ETA  6078s
+  [main] [ 540/1440] highway  N= 25 802.11bd           |  3447s  ETA  5746s
+  [main] [ 560/1440] highway  N= 25 C-V2X Mode 4       |  3458s  ETA  5434s
+  [main] [ 580/1440] highway  N= 25 UDP                |  3468s  ETA  5142s
+  [main] [ 600/1440] highway  N= 25 MQTT               |  3478s  ETA  4869s
+  [main] [ 620/1440] highway  N= 50 QDAP               |  3521s  ETA  4657s
+  [main] [ 640/1440] highway  N= 50 DSRC 802.11p       |  3567s  ETA  4459s
+  [main] [ 660/1440] highway  N= 50 802.11bd           |  3612s  ETA  4269s
+  [main] [ 680/1440] highway  N= 50 C-V2X Mode 4       |  3653s  ETA  4083s
+  [main] [ 700/1440] highway  N= 50 UDP                |  3690s  ETA  3901s
+  [main] [ 720/1440] highway  N= 50 MQTT               |  3729s  ETA  3729s
+  [main] [ 740/1440] highway  N= 75 QDAP               |  3825s  ETA  3618s
+  [main] [ 760/1440] highway  N= 75 DSRC 802.11p       |  3926s  ETA  3512s
+  [main] [ 780/1440] highway  N= 75 802.11bd           |  4026s  ETA  3407s
+  [main] [ 800/1440] highway  N= 75 C-V2X Mode 4       |  4115s  ETA  3292s
+  [main] [ 820/1440] highway  N= 75 UDP                |  4197s  ETA  3173s
+  [main] [ 840/1440] highway  N= 75 MQTT               |  4282s  ETA  3059s
+  [main] [ 860/1440] highway  N=100 QDAP               |  4452s  ETA  3003s
+  [main] [ 880/1440] highway  N=100 DSRC 802.11p       |  4629s  ETA  2946s
+  [main] [ 900/1440] highway  N=100 802.11bd           |  4805s  ETA  2883s
+  [main] [ 920/1440] highway  N=100 C-V2X Mode 4       |  4962s  ETA  2804s
+  [main] [ 940/1440] highway  N=100 UDP                |  5104s  ETA  2715s
+  [main] [ 960/1440] highway  N=100 MQTT               |  5255s  ETA  2627s
+  [main] [ 980/1440] cascade  N= 25 QDAP               |  5266s  ETA  2472s
+  [main] [1000/1440] cascade  N= 25 DSRC 802.11p       |  5278s  ETA  2322s
+  [main] [1020/1440] cascade  N= 25 802.11bd           |  5290s  ETA  2178s
+  [main] [1040/1440] cascade  N= 25 C-V2X Mode 4       |  5301s  ETA  2039s
+  [main] [1060/1440] cascade  N= 25 UDP                |  5310s  ETA  1904s
+  [main] [1080/1440] cascade  N= 25 MQTT               |  5321s  ETA  1774s
+  [main] [1100/1440] cascade  N= 50 QDAP               |  5365s  ETA  1658s
+  [main] [1120/1440] cascade  N= 50 DSRC 802.11p       |  5410s  ETA  1546s
+  [main] [1140/1440] cascade  N= 50 802.11bd           |  5456s  ETA  1436s
+  [main] [1160/1440] cascade  N= 50 C-V2X Mode 4       |  5497s  ETA  1327s
+  [main] [1180/1440] cascade  N= 50 UDP                |  5534s  ETA  1219s
+  [main] [1200/1440] cascade  N= 50 MQTT               |  5573s  ETA  1115s
+  [main] [1220/1440] cascade  N= 75 QDAP               |  5669s  ETA  1022s
+  [main] [1240/1440] cascade  N= 75 DSRC 802.11p       |  5770s  ETA   931s
+  [main] [1260/1440] cascade  N= 75 802.11bd           |  5870s  ETA   839s
+  [main] [1280/1440] cascade  N= 75 C-V2X Mode 4       |  5959s  ETA   745s
+  [main] [1300/1440] cascade  N= 75 UDP                |  6041s  ETA   651s
+  [main] [1320/1440] cascade  N= 75 MQTT               |  6126s  ETA   557s
+  [main] [1340/1440] cascade  N=100 QDAP               |  6295s  ETA   470s
+  [main] [1360/1440] cascade  N=100 DSRC 802.11p       |  6471s  ETA   381s
+  [main] [1380/1440] cascade  N=100 802.11bd           |  6647s  ETA   289s
+  [main] [1400/1440] cascade  N=100 C-V2X Mode 4       |  6804s  ETA   194s
+  [main] [1420/1440] cascade  N=100 UDP                |  6948s  ETA    98s
+  [main] [1440/1440] cascade  N=100 MQTT               |  7097s  ETA     0s
+
+>>> Faz 1.4 — Ablation study
+  [ablation] [  20/1200] urban    N= 25 QDAP               |    20s  ETA  1178s
+  [ablation] [  40/1200] urban    N= 25 QDAP-noFEC         |    39s  ETA  1126s
+  [ablation] [  60/1200] urban    N= 25 QDAP-noSched       |    62s  ETA  1176s
+  [ablation] [  80/1200] urban    N= 25 QDAP-noDelta       |    85s  ETA  1195s
+  [ablation] [ 100/1200] urban    N= 25 QDAP-noGhost       |   110s  ETA  1206s
+  [ablation] [ 120/1200] urban    N= 50 QDAP               |   187s  ETA  1685s
+  [ablation] [ 140/1200] urban    N= 50 QDAP-noFEC         |   260s  ETA  1966s
+  [ablation] [ 160/1200] urban    N= 50 QDAP-noSched       |   349s  ETA  2269s
+  [ablation] [ 180/1200] urban    N= 50 QDAP-noDelta       |   440s  ETA  2495s
+  [ablation] [ 200/1200] urban    N= 50 QDAP-noGhost       |   535s  ETA  2673s
+  [ablation] [ 220/1200] urban    N= 75 QDAP               |   701s  ETA  3121s
+  [ablation] [ 240/1200] urban    N= 75 QDAP-noFEC         |   856s  ETA  3426s
+  [ablation] [ 260/1200] urban    N= 75 QDAP-noSched       |   979s  ETA  3541s
+  [ablation] [ 280/1200] urban    N= 75 QDAP-noDelta       |  1103s  ETA  3625s
+  [ablation] [ 300/1200] urban    N= 75 QDAP-noGhost       |  1230s  ETA  3690s
+  [ablation] [ 320/1200] urban    N=100 QDAP               |  1414s  ETA  3887s
+  [ablation] [ 340/1200] urban    N=100 QDAP-noFEC         |  1587s  ETA  4014s
+  [ablation] [ 360/1200] urban    N=100 QDAP-noSched       |  1799s  ETA  4197s
+  [ablation] [ 380/1200] urban    N=100 QDAP-noDelta       |  2015s  ETA  4349s
+  [ablation] [ 400/1200] urban    N=100 QDAP-noGhost       |  2240s  ETA  4481s
+  [ablation] [ 420/1200] highway  N= 25 QDAP               |  2247s  ETA  4173s
+  [ablation] [ 440/1200] highway  N= 25 QDAP-noFEC         |  2253s  ETA  3892s
+  [ablation] [ 460/1200] highway  N= 25 QDAP-noSched       |  2261s  ETA  3637s
+  [ablation] [ 480/1200] highway  N= 25 QDAP-noDelta       |  2270s  ETA  3405s
+  [ablation] [ 500/1200] highway  N= 25 QDAP-noGhost       |  2278s  ETA  3189s
+  [ablation] [ 520/1200] highway  N= 50 QDAP               |  2303s  ETA  3012s
+  [ablation] [ 540/1200] highway  N= 50 QDAP-noFEC         |  2327s  ETA  2844s
+  [ablation] [ 560/1200] highway  N= 50 QDAP-noSched       |  2356s  ETA  2693s
+  [ablation] [ 580/1200] highway  N= 50 QDAP-noDelta       |  2386s  ETA  2550s
+  [ablation] [ 600/1200] highway  N= 50 QDAP-noGhost       |  2416s  ETA  2416s
+  [ablation] [ 620/1200] highway  N= 75 QDAP               |  2472s  ETA  2313s
+  [ablation] [ 640/1200] highway  N= 75 QDAP-noFEC         |  2525s  ETA  2209s
+  [ablation] [ 660/1200] highway  N= 75 QDAP-noSched       |  2590s  ETA  2119s
+  [ablation] [ 680/1200] highway  N= 75 QDAP-noDelta       |  2656s  ETA  2031s
+  [ablation] [ 700/1200] highway  N= 75 QDAP-noGhost       |  2725s  ETA  1946s
+  [ablation] [ 720/1200] highway  N=100 QDAP               |  2824s  ETA  1883s
+  [ablation] [ 740/1200] highway  N=100 QDAP-noFEC         |  2917s  ETA  1813s
+  [ablation] [ 760/1200] highway  N=100 QDAP-noSched       |  3032s  ETA  1755s
+  [ablation] [ 780/1200] highway  N=100 QDAP-noDelta       |  3148s  ETA  1695s
+  [ablation] [ 800/1200] highway  N=100 QDAP-noGhost       |  3271s  ETA  1636s
+  [ablation] [ 820/1200] cascade  N= 25 QDAP               |  3278s  ETA  1519s
+  [ablation] [ 840/1200] cascade  N= 25 QDAP-noFEC         |  3285s  ETA  1408s
+  [ablation] [ 860/1200] cascade  N= 25 QDAP-noSched       |  3293s  ETA  1302s
+  [ablation] [ 880/1200] cascade  N= 25 QDAP-noDelta       |  3301s  ETA  1200s
+  [ablation] [ 900/1200] cascade  N= 25 QDAP-noGhost       |  3309s  ETA  1103s
+  [ablation] [ 920/1200] cascade  N= 50 QDAP               |  3336s  ETA  1015s
+  [ablation] [ 940/1200] cascade  N= 50 QDAP-noFEC         |  3360s  ETA   929s
+  [ablation] [ 960/1200] cascade  N= 50 QDAP-noSched       |  3391s  ETA   848s
+  [ablation] [ 980/1200] cascade  N= 50 QDAP-noDelta       |  3421s  ETA   768s
+  [ablation] [1000/1200] cascade  N= 50 QDAP-noGhost       |  3452s  ETA   690s
+  [ablation] [1020/1200] cascade  N= 75 QDAP               |  3508s  ETA   619s
+  [ablation] [1040/1200] cascade  N= 75 QDAP-noFEC         |  3562s  ETA   548s
+  [ablation] [1060/1200] cascade  N= 75 QDAP-noSched       |  3627s  ETA   479s
+  [ablation] [1080/1200] cascade  N= 75 QDAP-noDelta       |  3693s  ETA   410s
+  [ablation] [1100/1200] cascade  N= 75 QDAP-noGhost       |  3761s  ETA   342s
+  [ablation] [1120/1200] cascade  N=100 QDAP               |  3860s  ETA   276s
+  [ablation] [1140/1200] cascade  N=100 QDAP-noFEC         |  3953s  ETA   208s
+  [ablation] [1160/1200] cascade  N=100 QDAP-noSched       |  4968s  ETA   171s
+  [ablation] [1180/1200] cascade  N=100 QDAP-noDelta       |  5088s  ETA    86s
+  [ablation] [1200/1200] cascade  N=100 QDAP-noGhost       |  5214s  ETA     0s
+
+[done] Total time: 12312s
+
+==========================================================================================
+  95% Confidence Intervals — URBAN N=75
+==========================================================================================
+  Protocol                 DENM PDR          <50ms        BSM PDR    Emerg p99
+  ------------------------------------------------------------------------
+  QDAP *               74.2± 5.6%    74.2± 5.6%    62.8± 1.0%      2.8± 0.1ms
+  DSRC 802.11p         53.5± 4.8%    53.5± 4.8%    56.3± 1.0%      2.4± 0.1ms
+  802.11bd             73.5± 4.7%    73.5± 4.7%    67.5± 1.0%      1.5± 0.0ms
+  C-V2X Mode 4         66.9± 4.8%    32.5± 2.4%    61.0± 1.0%    100.3± 0.1ms
+  UDP                  66.0± 5.8%    66.0± 5.8%    58.9± 1.1%      9.2± 0.2ms
+  MQTT                 59.4± 6.3%    48.6± 5.4%    53.1± 1.1%    240.6± 6.0ms
+
+  Mann-Whitney U  (QDAP > X, DENM PDR, one-sided):
+    QDAP > 802.11bd            U=   209  p=0.4091  ns
+    QDAP > DSRC 802.11p        U=   366  p=0.0000  ***
+    QDAP > C-V2X Mode 4        U=   280  p=0.0158  *
+    QDAP > UDP                 U=   275  p=0.0219  *
+    QDAP > MQTT                U=   321  p=0.0006  ***
+
+==========================================================================================
+  95% Confidence Intervals — HIGHWAY N=75
+==========================================================================================
+  Protocol                 DENM PDR          <50ms        BSM PDR    Emerg p99
+  ------------------------------------------------------------------------
+  QDAP *               44.7± 0.9%    44.7± 0.9%    40.9± 0.2%      2.8± 0.1ms
+  DSRC 802.11p         34.3± 0.8%    34.3± 0.8%    38.8± 0.2%      2.4± 0.1ms
+  802.11bd             46.2± 0.8%    46.2± 0.8%    45.9± 0.2%      1.5± 0.0ms
+  C-V2X Mode 4         42.2± 0.7%    20.4± 0.5%    41.7± 0.2%    100.3± 0.2ms
+  UDP                  40.2± 0.8%    40.2± 0.8%    38.5± 0.2%      9.0± 0.6ms
+  MQTT                 36.7± 0.7%    35.5± 0.7%    35.1± 0.2%    211.8± 1.9ms
+
+  Mann-Whitney U  (QDAP > X, DENM PDR, one-sided):
+    QDAP > 802.11bd            U=   112  p=0.9917  ns
+    QDAP > DSRC 802.11p        U=   400  p=0.0000  ***
+    QDAP > C-V2X Mode 4        U=   342  p=0.0001  ***
+    QDAP > UDP                 U=   382  p=0.0000  ***
+    QDAP > MQTT                U=   400  p=0.0000  ***
+
+==========================================================================================
+  95% Confidence Intervals — CASCADE N=75
+==========================================================================================
+  Protocol                 DENM PDR          <50ms        BSM PDR    Emerg p99
+  ------------------------------------------------------------------------
+  QDAP *               44.4± 1.1%    44.4± 1.1%    40.8± 0.2%      2.9± 0.1ms
+  DSRC 802.11p         34.9± 0.9%    34.9± 0.9%    38.8± 0.2%      2.5± 0.1ms
+  802.11bd             46.4± 1.1%    46.4± 1.1%    45.8± 0.2%      1.5± 0.0ms
+  C-V2X Mode 4         42.9± 1.1%    20.8± 0.5%    41.7± 0.2%    100.5± 0.1ms
+  UDP                  40.5± 1.0%    40.5± 1.0%    38.5± 0.2%      9.3± 0.2ms
+  MQTT                 37.4± 1.1%    36.4± 1.1%    35.0± 0.2%    210.0± 0.5ms
+
+  Mann-Whitney U  (QDAP > X, DENM PDR, one-sided):
+    QDAP > 802.11bd            U=   103  p=0.9958  ns
+    QDAP > DSRC 802.11p        U=   400  p=0.0000  ***
+    QDAP > C-V2X Mode 4        U=   273  p=0.0249  *
+    QDAP > UDP                 U=   354  p=0.0000  ***
+    QDAP > MQTT                U=   392  p=0.0000  ***
+
+==========================================================================================
+  ABLATION STUDY — URBAN N=75  (each component removed)
+==========================================================================================
+  Variant                    DENM PDR          <50ms    Emerg p99   ΔDENM PDR
+  ------------------------------------------------------------------------
+  QDAP                   74.2± 5.6%    74.2± 5.6%      2.8± 0.1ms           —
+  QDAP-noFEC             68.0± 6.0%    68.0± 6.0%      2.9± 0.0ms      -6.2pp
+  QDAP-noSched           74.2± 5.6%    74.2± 5.6%      9.5± 0.3ms      +0.0pp
+  QDAP-noDelta           74.2± 5.6%    74.2± 5.6%      2.8± 0.1ms      +0.0pp
+  QDAP-noGhost           74.3± 5.4%    74.2± 5.3%     24.9± 1.6ms      +0.2pp
+
+==========================================================================================
+  ABLATION STUDY — HIGHWAY N=75  (each component removed)
+==========================================================================================
+  Variant                    DENM PDR          <50ms    Emerg p99   ΔDENM PDR
+  ------------------------------------------------------------------------
+  QDAP                   44.7± 0.9%    44.7± 0.9%      2.8± 0.1ms           —
+  QDAP-noFEC             41.4± 0.9%    41.4± 0.9%      2.9± 0.1ms      -3.4pp
+  QDAP-noSched           44.7± 0.9%    44.7± 0.9%      9.5± 0.4ms      +0.0pp
+  QDAP-noDelta           44.7± 0.9%    44.7± 0.9%      2.8± 0.1ms      +0.0pp
+  QDAP-noGhost           44.7± 0.8%    44.6± 0.8%     21.7± 2.2ms      -0.1pp
+
+==========================================================================================
+  ABLATION STUDY — CASCADE N=75  (each component removed)
+==========================================================================================
+  Variant                    DENM PDR          <50ms    Emerg p99   ΔDENM PDR
+  ------------------------------------------------------------------------
+  QDAP                   44.4± 1.1%    44.4± 1.1%      2.9± 0.1ms           —
+  QDAP-noFEC             41.3± 1.1%    41.3± 1.1%      2.8± 0.0ms      -3.1pp
+  QDAP-noSched           44.4± 1.1%    44.4± 1.1%      9.6± 0.2ms      +0.0pp
+  QDAP-noDelta           44.4± 1.1%    44.4± 1.1%      2.9± 0.1ms      +0.0pp
+  QDAP-noGhost           44.6± 1.1%    44.6± 1.1%     24.2± 1.2ms      +0.2pp
+
+[csv] /Users/bahadirselimbakla/Desktop/quantum-protocol/simulations/v2x/results/arxiv_main.csv
+
+[csv] /Users/bahadirselimbakla/Desktop/quantum-protocol/simulations/v2x/results/arxiv_ablation.csv
+[json] /Users/bahadirselimbakla/Desktop/quantum-protocol/simulations/v2x/results/arxiv_significance.json
+
+[output]
+  results/arxiv_main.csv
+  results/arxiv_ablation.csv
+  results/arxiv_significance.json
+
+Next: python arxiv_stats.py --stats-only   (reprint tables without re-running)

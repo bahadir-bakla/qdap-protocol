@@ -1,0 +1,324 @@
+% ─────────────────────────────────────────────────────────────────────────────
+% QDAP ArXiv Paper — Bibliography
+% Target: IEEE Transactions on Intelligent Transportation Systems (T-ITS)
+% ─────────────────────────────────────────────────────────────────────────────
+
+% ── V2X Standards ─────────────────────────────────────────────────────────────
+
+@techreport{SAE_J2735_2023,
+  author      = {{SAE International}},
+  title       = {{J2735: Dedicated Short Range Communications (DSRC) Message Set Dictionary}},
+  institution = {SAE International},
+  year        = {2023},
+  number      = {J2735-202309},
+  note        = {Defines BSM, SPAT, MAP and other V2X message types}
+}
+
+@techreport{ETSI_EN_302_637_3,
+  author      = {{ETSI}},
+  title       = {{EN 302 637-3 V1.3.1: Intelligent Transport Systems (ITS); Vehicular
+                  Communications; Basic Set of Applications; Part 3: Specifications of
+                  Decentralized Environmental Notification (DEN) Basic Service}},
+  institution = {ETSI},
+  year        = {2019},
+  note        = {Defines DENM message format and 50 ms safety deadline}
+}
+
+@techreport{ETSI_TR_102_861,
+  author      = {{ETSI}},
+  title       = {{TR 102 861 V1.1.1: Intelligent Transport Systems (ITS);
+                  DECT as an alternative technology for ITS; Study}},
+  institution = {ETSI},
+  year        = {2011},
+  note        = {V2V channel model reference}
+}
+
+@techreport{ETSI_ES_202_663,
+  author      = {{ETSI}},
+  title       = {{ES 202 663 V1.2.0: Intelligent Transport Systems (ITS);
+                  European profile standard for the physical and medium access
+                  control layer of Intelligent Transport Systems operating in
+                  the 5 GHz frequency band}},
+  institution = {ETSI},
+  year        = {2013}
+}
+
+% ── DSRC / IEEE 802.11p ───────────────────────────────────────────────────────
+
+@standard{IEEE_80211p_2010,
+  author = {{IEEE}},
+  title  = {{IEEE Std 802.11p-2010: Wireless LAN Medium Access Control (MAC)
+              and Physical Layer (PHY) Specifications: Amendment 6:
+              Wireless Access in Vehicular Environments}},
+  year   = {2010},
+  note   = {Defines OFDM PHY at 5.9 GHz, EDCA MAC for V2V}
+}
+
+@article{Kenney2011,
+  author  = {Kenney, John B.},
+  title   = {Dedicated Short-Range Communications ({DSRC}) Standards in the {United States}},
+  journal = {Proceedings of the IEEE},
+  volume  = {99},
+  number  = {7},
+  pages   = {1162--1182},
+  year    = {2011},
+  doi     = {10.1109/JPROC.2011.2132790}
+}
+
+@article{Bianchi2000,
+  author  = {Bianchi, Giuseppe},
+  title   = {Performance Analysis of the {IEEE 802.11} Distributed Coordination Function},
+  journal = {IEEE Journal on Selected Areas in Communications},
+  volume  = {18},
+  number  = {3},
+  pages   = {535--547},
+  year    = {2000},
+  doi     = {10.1109/49.840210},
+  note    = {Saturation throughput model for CSMA/CA; basis for collision probability analysis}
+}
+
+@article{Sepulcre2011,
+  author  = {Sepulcre, Miguel and Gozalvez, Javier and Harri, J\'{e}r\^{o}me
+             and Hartenstein, Hannes},
+  title   = {Contextual Communications Congestion Control for Cooperative
+             Vehicular Networks},
+  journal = {IEEE Transactions on Wireless Communications},
+  volume  = {10},
+  number  = {2},
+  pages   = {385--389},
+  year    = {2011},
+  doi     = {10.1109/TWC.2011.122010.100504},
+  note    = {CBR-based collision model for broadcast DSRC; empirical validation}
+}
+
+@article{Gozalvez2012,
+  author  = {Gozalvez, Javier and Sepulcre, Miguel and Bauza, R.},
+  title   = {{IEEE 802.11p}-Based Vehicular Communications in Urban Environments},
+  journal = {Computer Communications},
+  volume  = {35},
+  number  = {14},
+  pages   = {1739--1750},
+  year    = {2012},
+  doi     = {10.1016/j.comcom.2012.04.008},
+  note    = {Two-ray ground reflection V2V path loss validation at 5.9 GHz}
+}
+
+% ── IEEE 802.11bd (Next-Generation V2X) ──────────────────────────────────────
+
+@standard{IEEE_80211bd_2022,
+  author = {{IEEE}},
+  title  = {{IEEE Std 802.11bd-2022: IEEE Standard for Information Technology —
+              Telecommunications and Information Exchange Between Systems —
+              Local and Metropolitan Area Networks — Specific Requirements —
+              Amendment 5: Enhancements for Next Generation V2X}},
+  year   = {2022},
+  note   = {256-QAM, LDPC coding, mid-amble, ~3 dB gain over 802.11p}
+}
+
+@article{Naik2019,
+  author  = {Naik, Gaurang and Choudhury, Biplav and Park, Jung-Min},
+  title   = {{IEEE 802.11bd} \& {5G NR V2X}: Evolution of Radio Access
+             Technologies for {V2X} Communications},
+  journal = {IEEE Access},
+  volume  = {7},
+  pages   = {70169--70184},
+  year    = {2019},
+  doi     = {10.1109/ACCESS.2019.2919489}
+}
+
+% ── C-V2X / LTE-V ────────────────────────────────────────────────────────────
+
+@techreport{3GPP_TS_36213,
+  author      = {{3GPP}},
+  title       = {{TS 36.213 V15.9.0: Evolved Universal Terrestrial Radio Access
+                  (E-UTRA); Physical layer procedures}},
+  institution = {3GPP},
+  year        = {2019},
+  note        = {Semi-Persistent Scheduling (SPS) specification for C-V2X Mode 4}
+}
+
+@article{Molina2017,
+  author  = {Molina-Masegosa, Rafael and Gozalvez, Javier},
+  title   = {{LTE-V} for Sidelink 5G {V2X} Vehicular Communications: A New
+             {5G} Technology for Short-Range Vehicle-to-Everything Communications},
+  journal = {IEEE Vehicular Technology Magazine},
+  volume  = {12},
+  number  = {4},
+  pages   = {30--39},
+  year    = {2017},
+  doi     = {10.1109/MVT.2017.2752798}
+}
+
+@article{Bazzi2017,
+  author  = {Bazzi, Alessandro and Masini, Barbara M. and Zanella, Alberto
+             and Thibault, Ivan},
+  title   = {On the Performance of {IEEE 802.11p} and {LTE-V2V} for the
+             Cooperative Awareness of Connected Vehicles},
+  journal = {IEEE Transactions on Vehicular Technology},
+  volume  = {66},
+  number  = {11},
+  pages   = {10419--10433},
+  year    = {2017},
+  doi     = {10.1109/TVT.2017.2750803},
+  note    = {Direct DSRC vs C-V2X comparison; SPS scheduling limitations}
+}
+
+@article{Campolo2017,
+  author  = {Campolo, Claudia and Molinaro, Antonella and Iera, Antonio
+             and Menichella, Francesco},
+  title   = {5G Network Slicing for Vehicle-to-Everything Services},
+  journal = {IEEE Wireless Communications},
+  volume  = {24},
+  number  = {6},
+  pages   = {38--45},
+  year    = {2017},
+  doi     = {10.1109/MWC.2017.1600408}
+}
+
+% ── Channel Models ────────────────────────────────────────────────────────────
+
+@techreport{WINNER_Plus_D53,
+  author      = {Heino, Pentti and others},
+  title       = {{WINNER+ D5.3}: {WINNER+} Final Channel Models},
+  institution = {WINNER+},
+  year        = {2010},
+  note        = {WINNER+ B1 V2V NLOS model: PL = 36.7 log(d) + 22.7 + 26 log(fc)}
+}
+
+@article{Nakagami1960,
+  author  = {Nakagami, Minoru},
+  title   = {The $m$-Distribution --- A General Formula of Intensity Distribution
+             of Rapid Fading},
+  journal = {Statistical Methods in Radio Wave Propagation},
+  pages   = {3--36},
+  year    = {1960},
+  note    = {Nakagami-m fading model; m=2 LOS, m=1 Rayleigh NLOS}
+}
+
+@inproceedings{Karedal2009,
+  author    = {Karedal, Johan and Tufvesson, Fredrik and Czink, Nicolai
+               and Paier, Alexander and Dumard, Charlotte and Zemen, Thomas
+               and Mecklenbr\"{a}uker, Christoph F. and Molisch, Andreas F.},
+  title     = {A Geometry-Based Stochastic MIMO Model for Vehicle-to-Vehicle
+               Communications},
+  booktitle = {IEEE Transactions on Wireless Communications},
+  volume    = {8},
+  number    = {7},
+  pages     = {3646--3657},
+  year      = {2009},
+  doi       = {10.1109/TWC.2009.080753}
+}
+
+% ── FEC / Coding Theory ───────────────────────────────────────────────────────
+
+@article{Shokrollahi2006,
+  author  = {Shokrollahi, Amin},
+  title   = {Raptor Codes},
+  journal = {IEEE Transactions on Information Theory},
+  volume  = {52},
+  number  = {6},
+  pages   = {2551--2567},
+  year    = {2006},
+  doi     = {10.1109/TIT.2006.874390},
+  note    = {Fountain code background; context for adaptive FEC design}
+}
+
+@techreport{RFC5109,
+  author      = {Li, Adam},
+  title       = {{RFC 5109}: {RTP} Payload Format for Generic Forward Error Correction},
+  institution = {IETF},
+  year        = {2007},
+  note        = {XOR-based systematic (k,r) FEC for real-time media; basis for QDAP FEC}
+}
+
+% ── Application-Layer Protocols / HOL Blocking ───────────────────────────────
+
+@techreport{RFC9000,
+  author      = {Iyengar, Jana and Thomson, Martin},
+  title       = {{RFC 9000}: {QUIC}: A {UDP}-Based Multiplexed and Secure Transport},
+  institution = {IETF},
+  year        = {2021},
+  note        = {Eliminates HOL blocking via stream multiplexing; TCP comparison baseline}
+}
+
+@article{Langley2017,
+  author  = {Langley, Adam and others},
+  title   = {{QUIC} at Google: Serving Web at the Speed of the Internet},
+  journal = {ACM Queue},
+  volume  = {15},
+  number  = {2},
+  pages   = {10--26},
+  year    = {2017},
+  note    = {HOL blocking impact on latency under packet loss}
+}
+
+% ── Emergency Priority / QoS in V2X ──────────────────────────────────────────
+
+@article{Lyu2021,
+  author  = {Lyu, Feng and Cheng, Nan and Shen, Xuemin and Zhang, Jun},
+  title   = {Characterizing Urban Vehicle-to-Vehicle Communications for
+             Reliable Safety Applications},
+  journal = {IEEE Transactions on Intelligent Transportation Systems},
+  volume  = {22},
+  number  = {6},
+  pages   = {3387--3397},
+  year    = {2021},
+  doi     = {10.1109/TITS.2020.2978107},
+  note    = {Emergency message reliability requirements in urban V2V}
+}
+
+@article{Deng2021,
+  author  = {Deng, Yansha and Uysal, Murat and Wu, Jinsong},
+  title   = {Priority-Aware Resource Allocation for Emergency Messages in
+             {C-V2X} Networks},
+  journal = {IEEE Transactions on Vehicular Technology},
+  volume  = {70},
+  number  = {9},
+  pages   = {8815--8827},
+  year    = {2021},
+  doi     = {10.1109/TVT.2021.3097264},
+  note    = {Application-layer priority for C-V2X; SPS deadline limitations}
+}
+
+@article{Zheng2015,
+  author  = {Zheng, Kan and Liu, Fei and Lei, Lei and Lin, Chuang and Jiang, Yu},
+  title   = {Stochastic Performance Analysis of a Wireless Finite-State Markov
+             Channel},
+  journal = {IEEE Transactions on Wireless Communications},
+  volume  = {12},
+  number  = {2},
+  pages   = {782--793},
+  year    = {2013},
+  doi     = {10.1109/TWC.2013.010413.120101},
+  note    = {Markov channel model for V2X loss estimation; FEC adaptation context}
+}
+
+% ── Statistical Methods ───────────────────────────────────────────────────────
+
+@article{Mann1947,
+  author  = {Mann, Henry B. and Whitney, Donald R.},
+  title   = {On a Test of Whether One of Two Random Variables is Stochastically
+             Larger than the Other},
+  journal = {The Annals of Mathematical Statistics},
+  volume  = {18},
+  number  = {1},
+  pages   = {50--60},
+  year    = {1947},
+  doi     = {10.1214/aoms/1177730491},
+  note    = {Mann-Whitney U test for non-parametric significance testing}
+}
+
+% ── Simulation Tools (optional, if ns-3 added later) ─────────────────────────
+
+@inproceedings{Sommer2011,
+  author    = {Sommer, Christoph and German, Reinhard and Dressler, Falko},
+  title     = {Bidirectionally Coupled Network and Road Traffic Simulation for
+               Improved {IVC} Analysis},
+  booktitle = {IEEE Transactions on Mobile Computing},
+  volume    = {10},
+  number    = {1},
+  pages     = {3--15},
+  year      = {2011},
+  doi       = {10.1109/TMC.2010.133},
+  note      = {Veins V2X simulation framework (SUMO + ns-2/3)}
+}
